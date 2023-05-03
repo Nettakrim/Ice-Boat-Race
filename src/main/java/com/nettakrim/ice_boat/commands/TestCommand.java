@@ -21,15 +21,7 @@ public class TestCommand implements CommandExecutor {
         if (sender instanceof Player) {
             Player player = (Player) sender;
 
-            float entranceLength = (random.nextFloat()+1)*20f;
-            Vector2f exit = new Vector2f(random.nextFloat()-0.5f, random.nextFloat()-0.5f).normalize();
-            while (exit.dot(lastEnd.angle) < 0.5f) {
-                exit = new Vector2f(random.nextFloat()-0.5f, random.nextFloat()-0.5f).normalize();
-            }
-            exit.mul((random.nextFloat()+1)*20f);
-            exit.add(lastEnd.point);
-
-            BezierPath bezierPath = BezierPath.build(lastEnd, entranceLength, exit);
+            BezierPath bezierPath = BezierPath.buildRandom(random, lastEnd);
             bezierPath.generate(player.getWorld(), 5, height);
             
             lastEnd = bezierPath.exit;

@@ -1,9 +1,24 @@
 package com.nettakrim.ice_boat.paths;
 
+import java.util.Random;
+
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 public class BezierPath extends Path {
+    public static BezierPath buildRandom(Random random, End entrance) {
+        float entranceLength = (random.nextFloat()+1)*20f;
+        Vector2f exit = new Vector2f(1,1);
+        while (exit.lengthSquared() > 1 || exit.normalize().dot(entrance.angle) < -0.5f) {
+            exit = new Vector2f(random.nextFloat()-0.5f, random.nextFloat()-0.5f);
+        }
+        //exit should never be too near angle*entranceLength
+        exit.normalize();
+        exit.mul((random.nextFloat()+1)*20f);
+        exit.add(entrance.point);
+
+        return BezierPath.build(entrance, entranceLength, exit);
+    }
 
     public static BezierPath build(End entrance, float entranceLength, Vector2f exitPoint) {
         Vector2f controlPoint = new Vector2f(entrance.angle);
