@@ -1,9 +1,10 @@
 package com.nettakrim.ice_boat.paths;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.joml.Vector2f;
+
+import com.nettakrim.ice_boat.FloatMath;
 
 public abstract class Path {
     public final End entrance;
@@ -20,7 +21,6 @@ public abstract class Path {
 
     public void generate(World world, float radius, int height) {
         Approximation approximation = getApproximation();
-        Bukkit.getLogger().info(approximation.minX+" "+approximation.maxX+" / "+approximation.minY+" "+approximation.maxY);
         int expand = ((int)radius)+1;
         for (int x = approximation.minX-expand; x < approximation.maxX+expand; x++) {
             for (int y = approximation.minY-expand; y < approximation.maxY+expand; y++) {
@@ -46,6 +46,59 @@ public abstract class Path {
             this.maxX = maxX;
             this.maxY = maxY;
             this.points = points;
+        }
+
+        //https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+        private float pointToLineDistanceSquared(Vector2f p, Vector2f a, Vector2f b) {
+            float A = p.x - a.x;
+            float B = p.y - a.y;
+            float C = b.x - a.x;
+            float D = b.y - a.y;
+          
+            float dot = A * C + B * D;
+            float len_sq = C * C + D * D;
+            float param = -1;
+            param = FloatMath.clamp(dot / len_sq, 0f, 1f);
+          
+            //float xx = FloatMaths.lerp(a.x, b.x, param);
+            //float yy = FloatMaths.lerp(a.y, b.y, param);
+            float xx;
+            float yy;
+
+            if (param < 0) {
+              xx = a.x;
+              yy = a.y;
+            }
+            else if (param > 1) {
+              xx = b.x;
+              yy = b.y;
+            }
+            else {
+              xx = a.x + param * C;
+              yy = a.y + param * D;
+            }
+          
+            float dx = p.x - xx;
+            float dy = p.y - yy;
+            return dx * dx + dy * dy;
+        }
+
+        private float pointsToLinesDistanceSquared(Vector2f[] points, Vector2f[] lines, int o) {
+            float distanceSquared = -1;
+            for (int i = o; i < points.length; i++) {
+                for (int j = 1-o; j < lines.length-1; j++) {
+                    float distance = pointToLineDistanceSquared(points[i], lines[j], lines[j+1]);
+                    if (distanceSquared == -1 || distance < distanceSquared) {
+                        distanceSquared = distance;
+                    }
+                }
+            }
+            return distanceSquared;
+        }
+
+        public float minimumDistance(Approximation other) {
+            float distanceSquared = Math.min(pointsToLinesDistanceSquared(points, other.points, 1), pointsToLinesDistanceSquared(other.points, points, 0));
+            return FloatMath.sqrt(distanceSquared);
         }
     }
 }

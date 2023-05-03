@@ -5,16 +5,17 @@ import java.util.Random;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
+import com.nettakrim.ice_boat.FloatMath;
+
 public class BezierPath extends Path {
     public static BezierPath buildRandom(Random random, End entrance) {
         float entranceLength = (random.nextFloat()+1)*20f;
         Vector2f exit = new Vector2f(1,1);
-        while (exit.lengthSquared() > 1 || exit.normalize().dot(entrance.angle) < -0.5f) {
+        while (exit.lengthSquared() > 1 || Math.abs(exit.normalize().dot(entrance.angle)) > 0.7f) {
             exit = new Vector2f(random.nextFloat()-0.5f, random.nextFloat()-0.5f);
         }
-        //exit should never be too near angle*entranceLength
         exit.normalize();
-        exit.mul((random.nextFloat()+1)*20f);
+        exit.mul((random.nextFloat()+1)*40f);
         exit.add(entrance.point);
 
         return BezierPath.build(entrance, entranceLength, exit);
@@ -49,10 +50,10 @@ public class BezierPath extends Path {
         Vector2f c = new Vector2f(a).mul(2.0f);
         Vector2f d = new Vector2f(A).sub(pos);
 
-        float kk = 1.0f/dot(b,b);
-        float kx = kk * dot(a,b);
-        float ky = kk * (2.0f*dot(a,a)+dot(d,b))/3.0f;
-        float kz = kk * dot(d,a);      
+        float kk = 1.0f/FloatMath.dot(b,b);
+        float kx = kk * FloatMath.dot(a,b);
+        float ky = kk * (2.0f*FloatMath.dot(a,a)+FloatMath.dot(d,b))/3.0f;
+        float kz = kk * FloatMath.dot(d,a);      
     
         float res = 0.0f;
     
@@ -62,73 +63,47 @@ public class BezierPath extends Path {
         float q2 = q*q;
         float h  = q2 + 4.0f*p3;
     
-        if( h>=0.0f ) 
-        {   // 1 root
-            h = sqrt(h);
+        if(h>=0.0f) {   
+            h = FloatMath.sqrt(h);
             Vector2f x = (new Vector2f(h,-h).sub(new Vector2f(q,q))).mul(0.5f);
     
             Vector2f uv = new Vector2f(
-                (float)(sign(x.x)*Math.pow(Math.abs(x.x), 1.0f/3.0f)),
-                (float)(sign(x.y)*Math.pow(Math.abs(x.y), 1.0f/3.0f))
+                (float)(FloatMath.sign(x.x)*Math.pow(Math.abs(x.x), 1.0f/3.0f)),
+                (float)(FloatMath.sign(x.y)*Math.pow(Math.abs(x.y), 1.0f/3.0f))
             );
-            float t = clamp( uv.x+uv.y-kx, 0.0f, 1.0f );
+            float t = FloatMath.clamp( uv.x+uv.y-kx, 0.0f, 1.0f );
             Vector2f q3 = new Vector2f(d).add((new Vector2f(c).add(new Vector2f(b).mul(t))).mul(t));
-            res = dot(q3,q3);
-        }
-        else 
-        {   // 3 roots
-            float z = sqrt(-p);
+            res = FloatMath.dot(q3,q3);
+        } else {   
+            float z = FloatMath.sqrt(-p);
             float v = ((float)Math.acos((double)(q/(p*z*2.0f))))/3.0f;
             float m = (float)Math.cos((double)v);
             float n = (float)(Math.sin((double)v)*1.732050808);
-            Vector3f t = clamp(new Vector3f(m+m,-n-m,n-m).mul(z).sub(kx, kx, kx), 0.0f, 1.0f );
+            Vector3f t = FloatMath.clamp(new Vector3f(m+m,-n-m,n-m).mul(z).sub(kx, kx, kx), 0.0f, 1.0f );
 
             Vector2f qx = new Vector2f(d).add((new Vector2f(c).add(new Vector2f(b).mul(t.x))).mul(t.x));
-            float dx = dot(qx, qx);
+            float dx = FloatMath.dot(qx, qx);
 
             Vector2f qy = new Vector2f(d).add((new Vector2f(c).add(new Vector2f(b).mul(t.y))).mul(t.y));
-            float dy = dot(qy, qy);
+            float dy = FloatMath.dot(qy, qy);
 
-            if( dx<dy ) { 
+            if(dx<dy) { 
                 res=dx;
             } else {
                 res=dy;
             }
         }
         
-        return sqrt(res);
-    }
-
-    private float sign(float x) {
-        if (x < 0) return -1;
-        if (x > 0) return 1;
-        return 0;
-    }
-
-    private Vector3f clamp(Vector3f v, float min, float max) {
-        return new Vector3f(clamp(v.x, min, max), clamp(v.y, min, max), clamp(v.z, min, max));
-    }
-
-    private float clamp(float x, float min, float max) {
-        if (x <= min) return min;
-        if (x >= max) return max;
-        return x;
-    }
-
-    private float sqrt(float x) {
-        return (float)Math.sqrt((double)x);
-    }
-
-    private float dot(Vector2f a, Vector2f b) {
-        return new Vector2f(a).dot(b);
+        return FloatMath.sqrt(res);
     }
 
     @Override
     public Approximation getApproximation() {
+        Vector2f apexApprox = FloatMath.lerp(FloatMath.lerp(entrance.point, controlPoint, 0.75f), FloatMath.lerp(exit.point, controlPoint, 0.75f), 0.5f);
         int minX = (int)Math.min(Math.min(entrance.point.x, exit.point.x), controlPoint.x);
         int minY = (int)Math.min(Math.min(entrance.point.y, exit.point.y), controlPoint.y);
         int maxX = (int)Math.max(Math.max(entrance.point.x, exit.point.x), controlPoint.x);
         int maxY = (int)Math.max(Math.max(entrance.point.y, exit.point.y), controlPoint.y);
-        return new Approximation(minX, minY, maxX, maxY, new Vector2f[]{entrance.point, controlPoint, exit.point});
+        return new Approximation(minX, minY, maxX, maxY, new Vector2f[]{entrance.point, apexApprox, exit.point});
     }
 }

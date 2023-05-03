@@ -7,6 +7,6 @@ import org.spigotmc.event.entity.EntityDismountEvent;
 public class BoatListener implements Listener {
     @EventHandler
     public void onEntityDismount(EntityDismountEvent event) {
-        event.setCancelled(true);
+        //event.setCancelled(true);
     }
 }
