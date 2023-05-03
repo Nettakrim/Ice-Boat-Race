@@ -1,0 +1,12 @@
+name: Ice-Boat
+version: '1.0'
+main: com.nettakrim.ice_boat.IceBoat
+description: Procedurally Generating Ice Boat Minigame!
+api-version: '1.19'
+bootstrapper: com.nettakrim.ice_boat.IceBoatBootstrap
+loader: com.nettakrim.ice_boat.IceBoatLoader
+commands:
+    test:
+        description: "Test"
+        usage: "/test"
+        permission: ice_boat.test
