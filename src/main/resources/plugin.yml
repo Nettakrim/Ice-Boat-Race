@@ -6,7 +6,7 @@ api-version: '1.19'
 bootstrapper: com.nettakrim.ice_boat.IceBoatBootstrap
 loader: com.nettakrim.ice_boat.IceBoatLoader
 commands:
-    test:
-        description: "Test"
-        usage: "/test"
-        permission: ice_boat.test
+    start:
+        description: "Start"
+        usage: "/start"
+        permission: ice_boat.start

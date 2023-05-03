@@ -2,12 +2,16 @@ package com.nettakrim.ice_boat;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.UUID;
 
+import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.joml.Vector2f;
 
-import com.nettakrim.ice_boat.commands.TestCommand;
+import com.nettakrim.ice_boat.commands.StartCommand;
 import com.nettakrim.ice_boat.paths.BezierPath;
 import com.nettakrim.ice_boat.paths.End;
 import com.nettakrim.ice_boat.paths.Path;
@@ -26,16 +30,38 @@ public class IceBoat extends JavaPlugin {
         (End end, float lengthScale) -> BezierPath.buildRandom(random, end, lengthScale)
     };
 
+    public BukkitTask[] levitationTimers;
+    public Location[] lastSafeLocation;
+
+    public void start(World world) {
+        generate(world);
+        int players = world.getPlayerCount();
+        levitationTimers = new BukkitTask[players];
+        lastSafeLocation = new Location[players];
+    }
+
+    public static int getPlayerIndex(Player player) {
+        return instance.getPlayerIndex(player.getUniqueId());
+    }
+
+    public int getPlayerIndex(UUID player) {
+        return 0;
+    }
+
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(new BoatListener(), this);
 
-        this.getCommand("test").setExecutor(new TestCommand());
+        this.getCommand("start").setExecutor(new StartCommand());
 
         instance = this;
     }
 
-    public Path.RandomPathBuilder getPathBuilder(Random random) {
+    public int getCurrentHeight() {
+        return height;
+    }
+
+    public Path.RandomPathBuilder getPathBuilder() {
         return pathBuilders[random.nextInt(pathBuilders.length)];
     }
 
@@ -52,7 +78,7 @@ public class IceBoat extends JavaPlugin {
         int maxAttempts = 25;
         float lengthScale = 40;
 
-        Path path = getValidPath(getPathBuilder(random), radius, safeZone, turnWidth, maxAttempts, lengthScale);
+        Path path = getRandomValidPath(radius, safeZone, turnWidth, maxAttempts, lengthScale);
 
         path.generate(world, radius, height);
         paths.add(path);
@@ -60,7 +86,7 @@ public class IceBoat extends JavaPlugin {
         height--;
     }
 
-    private Path getValidPath(Path.RandomPathBuilder builder, float radius, float safeZone, float turnWidth, int maxAttempts, float lengthScale) {
+    private Path getRandomValidPath(float radius, float safeZone, float turnWidth, int maxAttempts, float lengthScale) {
         int attempts = 0;
         Path path = null;
 
@@ -72,7 +98,7 @@ public class IceBoat extends JavaPlugin {
         }
 
         while(attempts < maxAttempts) {
-            path = builder.buildRandom(lastEnd, lengthScale);
+            path = getPathBuilder().buildRandom(lastEnd, lengthScale);
             if (passChecks(path, safeZone, turnWidth, radius*2f)) {
                 return path;
             } else {
