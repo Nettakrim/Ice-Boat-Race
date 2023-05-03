@@ -39,6 +39,7 @@ public class TestCommand implements CommandExecutor {
 
             float turnWidth = 50;
             float safeZone = 50;
+            float radius = FloatMath.clamp((((float)height)/5f)-40f, 2f, 12f);
 
             while(attempts < maxAttempts) {
                 bezierPath = BezierPath.buildRandom(random, lastEnd);
@@ -54,14 +55,14 @@ public class TestCommand implements CommandExecutor {
                     float length = bezierPath.exit.point.length();
 
                     attempts++;
-                    if (minimumDistance < 5*2 || angle > FloatMath.clamp(1-(length-safeZone)/turnWidth, -0.5f, 1)) {
+                    if (minimumDistance < radius*2f || angle > FloatMath.clamp(1-(length-safeZone)/turnWidth, -0.5f, 1)) {
                         if (attempts == maxAttempts) height--;
                         continue;
                     }
                 }
                 break;
             }
-            bezierPath.generate(player.getWorld(), 5, height);
+            bezierPath.generate(player.getWorld(), radius, height);
             paths.add(bezierPath);
 
             height--;

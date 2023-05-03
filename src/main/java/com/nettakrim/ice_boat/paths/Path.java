@@ -26,7 +26,7 @@ public abstract class Path {
             for (int y = approximation.minY-expand; y < approximation.maxY+expand; y++) {
                 float distance = getDistanceField(new Vector2f(x, y));
                 if (distance < radius) {
-                    world.getBlockAt(x, height, y).setType(Material.PACKED_ICE);
+                    world.getBlockAt(x, height, y).setType(distance < radius/2f ? Material.BLUE_ICE : Material.PACKED_ICE);
                     world.getBlockAt(x, height+1, y).setType(Material.AIR);
                 }
             }
@@ -60,24 +60,9 @@ public abstract class Path {
             float param = -1;
             param = FloatMath.clamp(dot / len_sq, 0f, 1f);
           
-            //float xx = FloatMaths.lerp(a.x, b.x, param);
-            //float yy = FloatMaths.lerp(a.y, b.y, param);
-            float xx;
-            float yy;
-
-            if (param < 0) {
-              xx = a.x;
-              yy = a.y;
-            }
-            else if (param > 1) {
-              xx = b.x;
-              yy = b.y;
-            }
-            else {
-              xx = a.x + param * C;
-              yy = a.y + param * D;
-            }
-          
+            float xx = FloatMath.lerp(a.x, b.x, param);
+            float yy = FloatMath.lerp(a.y, b.y, param);
+        
             float dx = p.x - xx;
             float dy = p.y - yy;
             return dx * dx + dy * dy;
@@ -96,8 +81,31 @@ public abstract class Path {
             return distanceSquared;
         }
 
+        //https://stackoverflow.com/questions/3838329/how-can-i-check-if-two-segments-intersect
+        // doesnt work with coliniar lines, but that *shouldnt* really ever happen here
+        private boolean ccw(Vector2f a, Vector2f b, Vector2f c) {
+            return (c.y-a.y) * (b.x-a.x) > (b.y-a.y) * (c.x-a.x);
+        }
+
+        private boolean linesIntersect(Vector2f a1, Vector2f a2, Vector2f b1, Vector2f b2) {
+            return ccw(a1,b1,b2) != ccw(a2,b1,b2) && ccw(a1,a2,b1) != ccw(a1,a2,b2);
+        }
+
+        private boolean hasIntersection(Vector2f[] linesA, Vector2f[] linesB) {
+            for (int i = 0; i < linesA.length-1; i++) {
+                for (int j = 0; j < linesB.length-1; j++) {
+                    if(linesIntersect(linesA[j], linesA[j+1], linesB[j], linesB[j+1])) return true;
+                }
+            }
+            return false;
+        }
+
         public float minimumDistance(Approximation other) {
-            float distanceSquared = Math.min(pointsToLinesDistanceSquared(points, other.points, 1), pointsToLinesDistanceSquared(other.points, points, 0));
+            if (hasIntersection(points, other.points)) return 0;
+            float distanceSquared = Math.min(
+                pointsToLinesDistanceSquared(points, other.points, 1),
+                pointsToLinesDistanceSquared(other.points, points, 0)
+            );
             return FloatMath.sqrt(distanceSquared);
         }
     }
