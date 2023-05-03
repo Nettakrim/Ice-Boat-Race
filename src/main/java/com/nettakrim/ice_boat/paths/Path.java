@@ -7,6 +7,11 @@ import org.joml.Vector2f;
 import com.nettakrim.ice_boat.FloatMath;
 
 public abstract class Path {
+    @FunctionalInterface
+    public interface RandomPathBuilder {
+        Path buildRandom(End lastEnd);
+    }
+
     public final End entrance;
     public final End exit;
 
