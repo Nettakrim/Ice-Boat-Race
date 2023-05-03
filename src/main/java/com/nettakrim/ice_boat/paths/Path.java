@@ -36,7 +36,9 @@ public abstract class Path {
                 float distance = getDistanceField(new Vector2f(x, y));
                 if (distance < radius) {
                     world.getBlockAt(x, height, y).setType(distance < radius*blueIceSize ? Material.BLUE_ICE : Material.PACKED_ICE);
-                    world.getBlockAt(x, height+1, y).setType(Material.AIR);
+                    if (distance < radius-1.5f) {
+                        world.getBlockAt(x, height+1, y).setType(Material.AIR);
+                    }
                 }
             }
         }

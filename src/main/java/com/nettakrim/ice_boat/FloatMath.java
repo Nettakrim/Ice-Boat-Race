@@ -28,6 +28,10 @@ public class FloatMath {
         return new Vector2f(a).dot(b);
     }
 
+    public static float lerpClamped(float a, float b, float t) {
+        return lerp(a, b, clamp(t, 0, 1));
+    }
+
     public static float lerp(float a, float b, float t) {
         return (1-t)*a + t*b;
     }  
