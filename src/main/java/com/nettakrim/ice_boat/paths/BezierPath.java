@@ -45,6 +45,7 @@ public class BezierPath extends Path {
 
     //https://www.shadertoy.com/view/MlKcDD
     private float sdf(Vector2f pos, Vector2f A, Vector2f B, Vector2f C) {
+        //returns NAN if A B and C are all in straight line, which is probably unlikely
         Vector2f a = new Vector2f(B).sub(A);
         Vector2f b = new Vector2f(A).sub(new Vector2f(B).mul(2)).add(C);
         Vector2f c = new Vector2f(a).mul(2.0f);

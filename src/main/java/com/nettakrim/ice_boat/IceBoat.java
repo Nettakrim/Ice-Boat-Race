@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Boat;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -21,8 +23,8 @@ public class IceBoat extends JavaPlugin {
     public static IceBoat instance;
 
     private Random random = new Random();
-    private int height = 256;
-    private ArrayList<Path> paths = new ArrayList<Path>();
+    private int height;
+    private ArrayList<Path> paths;
 
     private End defaultEnd = new End(new Vector2f(0,0), new Vector2f(1,0));
 
@@ -34,10 +36,12 @@ public class IceBoat extends JavaPlugin {
     public Location[] lastSafeLocation;
 
     public void start(World world) {
-        generate(world);
+        height = 256;
+        paths = new ArrayList<Path>();
         int players = world.getPlayerCount();
         levitationTimers = new BukkitTask[players];
         lastSafeLocation = new Location[players];
+        generateStart(world, players);
     }
 
     public static int getPlayerIndex(Player player) {
@@ -69,6 +73,25 @@ public class IceBoat extends JavaPlugin {
         if (testHeight <= height+1) {
             generate(world);
         }
+    }
+
+    public void generateStart(World world, int players) {
+        float radius = 15f;
+
+        BezierPath path = BezierPath.build(defaultEnd, 40f, new Vector2f(50f, (random.nextFloat()-0.5f)*20f));
+
+        path.generate(world, radius, height);
+        paths.add(path);
+
+        int types = Boat.Type.values().length;
+
+        for (float i = 0; i<players; i++) {
+            float position = ((i-(((float)players-1)/2f))/Math.max(players-1, 1))*radius*1.5f;
+            Boat boat = (Boat)world.spawnEntity(new Location(world, 0, height+1, position, -90, 0), EntityType.BOAT);
+            boat.setBoatType(Boat.Type.values()[random.nextInt(types)]);
+        }
+
+        height--;
     }
 
     public void generate(World world) {
