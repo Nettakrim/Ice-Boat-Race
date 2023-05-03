@@ -34,6 +34,7 @@ public class IceBoat extends JavaPlugin {
 
     public BukkitTask[] levitationTimers;
     public Location[] lastSafeLocation;
+    public ArrayList<UUID> playerIndexes;
 
     public void start(World world) {
         height = 256;
@@ -41,6 +42,7 @@ public class IceBoat extends JavaPlugin {
         int players = world.getPlayerCount();
         levitationTimers = new BukkitTask[players];
         lastSafeLocation = new Location[players];
+        createPlayerIndexes(world, players);
         generateStart(world, players);
     }
 
@@ -48,8 +50,15 @@ public class IceBoat extends JavaPlugin {
         return instance.getPlayerIndex(player.getUniqueId());
     }
 
+    public void createPlayerIndexes(World world, int players) {
+        playerIndexes = new ArrayList<UUID>();
+        for (Player player : world.getPlayers()) {
+            playerIndexes.add(player.getUniqueId());
+        }
+    }
+
     public int getPlayerIndex(UUID player) {
-        return 0;
+        return playerIndexes.indexOf(player);
     }
 
     @Override
