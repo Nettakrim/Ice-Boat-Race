@@ -9,7 +9,7 @@ import com.nettakrim.ice_boat.FloatMath;
 public abstract class Path {
     @FunctionalInterface
     public interface RandomPathBuilder {
-        Path buildRandom(End lastEnd);
+        Path buildRandom(End lastEnd, float lengthScale);
     }
 
     public final End entrance;

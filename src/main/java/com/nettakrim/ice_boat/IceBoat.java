@@ -20,8 +20,10 @@ public class IceBoat extends JavaPlugin {
     private int height = 256;
     private ArrayList<Path> paths = new ArrayList<Path>();
 
+    private End defaultEnd = new End(new Vector2f(0,0), new Vector2f(1,0));
+
     private Path.RandomPathBuilder[] pathBuilders = {
-        (End end) -> BezierPath.buildRandom(random, end)
+        (End end, float lengthScale) -> BezierPath.buildRandom(random, end, lengthScale)
     };
 
     @Override
@@ -44,19 +46,13 @@ public class IceBoat extends JavaPlugin {
     }
 
     public void generate(World world) {
-        int size = paths.size();
-        End lastEnd = null;
-        if (size == 0) {
-            lastEnd = new End(new Vector2f(0,0), new Vector2f(1,0));
-        } else {
-            lastEnd = paths.get(size-1).exit;
-        }
-
+        float radius = FloatMath.clamp((((float)height)/5f)-40f, 2f, 12f);
         float turnWidth = 50;
         float safeZone = 50;
-        float radius = FloatMath.clamp((((float)height)/5f)-40f, 2f, 12f);
+        int maxAttempts = 25;
+        float lengthScale = 40;
 
-        Path path = getValidPath(getPathBuilder(random), lastEnd, radius, safeZone, turnWidth, 25);
+        Path path = getValidPath(getPathBuilder(random), radius, safeZone, turnWidth, maxAttempts, lengthScale);
 
         path.generate(world, radius, height);
         paths.add(path);
@@ -64,12 +60,19 @@ public class IceBoat extends JavaPlugin {
         height--;
     }
 
-    private Path getValidPath(Path.RandomPathBuilder builder, End lastEnd, float radius, float safeZone, float turnWidth, int maxAttempts) {
+    private Path getValidPath(Path.RandomPathBuilder builder, float radius, float safeZone, float turnWidth, int maxAttempts, float lengthScale) {
         int attempts = 0;
         Path path = null;
 
+        End lastEnd = null;
+        if (paths.size() == 0) {
+            lastEnd = defaultEnd;
+        } else {
+            lastEnd = paths.get(paths.size()-1).exit;
+        }
+
         while(attempts < maxAttempts) {
-            path = builder.buildRandom(lastEnd);
+            path = builder.buildRandom(lastEnd, lengthScale);
             if (passChecks(path, safeZone, turnWidth, radius*2f)) {
                 return path;
             } else {

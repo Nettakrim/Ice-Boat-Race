@@ -8,14 +8,14 @@ import org.joml.Vector3f;
 import com.nettakrim.ice_boat.FloatMath;
 
 public class BezierPath extends Path {
-    public static BezierPath buildRandom(Random random, End entrance) {
-        float entranceLength = (random.nextFloat()+1)*20f;
+    public static BezierPath buildRandom(Random random, End entrance, float lengthScale) {
+        float entranceLength = (random.nextFloat()+1)*(lengthScale/2);
         Vector2f exit = new Vector2f(1,1);
         while (exit.lengthSquared() > 1 || Math.abs(exit.normalize().dot(entrance.angle)) > 0.7f) {
             exit = new Vector2f(random.nextFloat()-0.5f, random.nextFloat()-0.5f);
         }
         exit.normalize();
-        exit.mul((random.nextFloat()+1)*40f);
+        exit.mul((random.nextFloat()+1)*lengthScale);
         exit.add(entrance.point);
 
         return BezierPath.build(entrance, entranceLength, exit);
