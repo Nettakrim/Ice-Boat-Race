@@ -7,6 +7,10 @@ bootstrapper: com.nettakrim.ice_boat.IceBoatBootstrap
 loader: com.nettakrim.ice_boat.IceBoatLoader
 commands:
     start:
-        description: "Start"
+        description: "Starts Game"
         usage: "/start"
         permission: ice_boat.start
+    reset:
+        description: "Clears the Road"
+        usage: "/reset"
+        permission: ice_boat.reset

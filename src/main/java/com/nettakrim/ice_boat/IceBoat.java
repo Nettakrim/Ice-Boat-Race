@@ -13,6 +13,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.joml.Vector2f;
 
+import com.nettakrim.ice_boat.commands.ResetCommand;
 import com.nettakrim.ice_boat.commands.StartCommand;
 import com.nettakrim.ice_boat.paths.BezierPath;
 import com.nettakrim.ice_boat.paths.End;
@@ -21,6 +22,16 @@ import com.nettakrim.ice_boat.paths.Path.Approximation;
 
 public class IceBoat extends JavaPlugin {
     public static IceBoat instance;
+
+    @Override
+    public void onEnable() {
+        getServer().getPluginManager().registerEvents(new BoatListener(), this);
+
+        this.getCommand("start").setExecutor(new StartCommand());
+        this.getCommand("reset").setExecutor(new ResetCommand());
+
+        instance = this;
+    }
 
     private Random random = new Random();
     private int height;
@@ -46,6 +57,12 @@ public class IceBoat extends JavaPlugin {
         generateStart(world, players);
     }
 
+    public void clear(World world) {
+        for (Path path : paths) {
+            path.clear(world);
+        }
+    }
+
     public static int getPlayerIndex(Player player) {
         return instance.getPlayerIndex(player.getUniqueId());
     }
@@ -59,15 +76,6 @@ public class IceBoat extends JavaPlugin {
 
     public int getPlayerIndex(UUID player) {
         return playerIndexes.indexOf(player);
-    }
-
-    @Override
-    public void onEnable() {
-        getServer().getPluginManager().registerEvents(new BoatListener(), this);
-
-        this.getCommand("start").setExecutor(new StartCommand());
-
-        instance = this;
     }
 
     public int getCurrentHeight() {
@@ -89,13 +97,13 @@ public class IceBoat extends JavaPlugin {
 
         BezierPath path = BezierPath.build(defaultEnd, 40f, new Vector2f(50f, (random.nextFloat()-0.5f)*20f));
 
-        path.generate(world, radius, height);
+        path.generate(world, radius, height, 0.75f);
         paths.add(path);
 
         int types = Boat.Type.values().length;
 
         for (float i = 0; i<players; i++) {
-            float position = ((i-(((float)players-1)/2f))/Math.max(players-1, 1))*radius*1.5f;
+            float position = ((i-(((float)players-1)/2f))/Math.max(players-1, 1))*radius*1.4f;
             Boat boat = (Boat)world.spawnEntity(new Location(world, 0, height+1, position, -90, 0), EntityType.BOAT);
             boat.setBoatType(Boat.Type.values()[random.nextInt(types)]);
         }
@@ -112,7 +120,7 @@ public class IceBoat extends JavaPlugin {
 
         Path path = getRandomValidPath(radius, safeZone, turnWidth, maxAttempts, lengthScale);
 
-        path.generate(world, radius, height);
+        path.generate(world, radius, height, 0.5f);
         paths.add(path);
 
         height--;

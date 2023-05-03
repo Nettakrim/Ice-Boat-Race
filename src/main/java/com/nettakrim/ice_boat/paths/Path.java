@@ -15,6 +15,9 @@ public abstract class Path {
     public final End entrance;
     public final End exit;
 
+    private int expand;
+    private int height;
+
     protected Path(End entrance, End exit) {
         this.entrance = entrance;
         this.exit = exit;
@@ -24,16 +27,26 @@ public abstract class Path {
 
     public abstract Approximation getApproximation();
 
-    public void generate(World world, float radius, int height) {
+    public void generate(World world, float radius, int height, float blueIceSize) {
         Approximation approximation = getApproximation();
-        int expand = ((int)radius)+1;
+        this.expand = ((int)radius)+1;
+        this.height = height;
         for (int x = approximation.minX-expand; x < approximation.maxX+expand; x++) {
             for (int y = approximation.minY-expand; y < approximation.maxY+expand; y++) {
                 float distance = getDistanceField(new Vector2f(x, y));
                 if (distance < radius) {
-                    world.getBlockAt(x, height, y).setType(distance < radius/2f ? Material.BLUE_ICE : Material.PACKED_ICE);
+                    world.getBlockAt(x, height, y).setType(distance < radius*blueIceSize ? Material.BLUE_ICE : Material.PACKED_ICE);
                     world.getBlockAt(x, height+1, y).setType(Material.AIR);
                 }
+            }
+        }
+    }
+
+    public void clear(World world) {
+        Approximation approximation = getApproximation();
+        for (int x = approximation.minX-expand; x < approximation.maxX+expand; x++) {
+            for (int y = approximation.minY-expand; y < approximation.maxY+expand; y++) {
+                world.getBlockAt(x, height, y).setType(Material.AIR);
             }
         }
     }
