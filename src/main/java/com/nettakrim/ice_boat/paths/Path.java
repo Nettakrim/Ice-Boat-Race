@@ -1,7 +1,10 @@
 package com.nettakrim.ice_boat.paths;
 
+import java.util.Random;
+
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.joml.Vector2f;
 
 import com.nettakrim.ice_boat.FloatMath;
@@ -14,9 +17,10 @@ public abstract class Path {
 
     public final End entrance;
     public final End exit;
+    public Approximation approximation;
 
     private int expand;
-    private int height;
+    public int height;
 
     protected Path(End entrance, End exit) {
         this.entrance = entrance;
@@ -25,27 +29,29 @@ public abstract class Path {
 
     public abstract float getDistanceField(Vector2f pos);
 
-    public abstract Approximation getApproximation();
+    protected abstract Approximation createApproximation();
 
     public void generate(World world, float radius, int height, float blueIceSize) {
-        Approximation approximation = getApproximation();
         this.expand = ((int)radius)+1;
         this.height = height;
+
+        int exitX = (int)(exit.point.x);
+        int exitY = (int)(exit.point.y);
+        float angleX = exit.angle.x;
+        float angleY = exit.angle.y;     
+
         for (int x = approximation.minX-expand; x < approximation.maxX+expand; x++) {
             for (int y = approximation.minY-expand; y < approximation.maxY+expand; y++) {
+                if (((exitX-x)*angleX)+((exitY-y)*angleY) < 0) continue;
                 float distance = getDistanceField(new Vector2f(x, y));
                 if (distance < radius) {
                     world.getBlockAt(x, height, y).setType(distance < radius*blueIceSize ? Material.BLUE_ICE : Material.PACKED_ICE);
-                    if (distance < radius-1.5f) {
-                        world.getBlockAt(x, height+1, y).setType(Material.AIR);
-                    }
                 }
             }
         }
     }
 
     public void clear(World world) {
-        Approximation approximation = getApproximation();
         for (int x = approximation.minX-expand; x < approximation.maxX+expand; x++) {
             for (int y = approximation.minY-expand; y < approximation.maxY+expand; y++) {
                 world.getBlockAt(x, height, y).setType(Material.AIR);
@@ -53,11 +59,32 @@ public abstract class Path {
         }
     }
 
+    public void decay(Random random, World world, float decaySpeed, int decayStage) {
+        float areaToDecay = (approximation.getArea(expand)/256)*decaySpeed;
+        int decayBlocks = (int)areaToDecay;
+        if (random.nextFloat() < areaToDecay % 1) decayBlocks++;
+        for (int a = 0; a < decayBlocks; a++) {
+            int x = random.nextInt(approximation.minX-expand, approximation.maxX+expand);
+            int y = random.nextInt(approximation.minY-expand, approximation.maxY+expand);
+            Block block = world.getBlockAt(x, height, y);
+            if (block.isSolid()) {
+                Material material = block.getType();
+                if (material == Material.BLUE_ICE && decayStage >= 2) {
+                    block.setType(Material.PACKED_ICE);
+                } else if (material == Material.PACKED_ICE && decayStage >= 1) {
+                    block.setType(Material.ICE);
+                } else if (material == Material.ICE) {
+                    block.setType(Material.AIR);
+                }
+            }
+        }
+    }
+
     public class Approximation {
-        public int minX;
-        public int minY;
-        public int maxX;
-        public int maxY;
+        public final int minX;
+        public final int minY;
+        public final int maxX;
+        public final int maxY;
         public final Vector2f[] points;
 
         public Approximation(int minX, int minY, int maxX, int maxY, Vector2f[] points) {
@@ -66,6 +93,10 @@ public abstract class Path {
             this.maxX = maxX;
             this.maxY = maxY;
             this.points = points;
+        }
+
+        public int getArea(int expand) {
+            return ((maxX-minX)+(expand*2))*((maxY-minY)+(expand*2));
         }
 
         //https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment

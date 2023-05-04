@@ -1,8 +1,9 @@
 package com.nettakrim.ice_boat;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
@@ -13,22 +14,42 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitScheduler;
-import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
+import org.spigotmc.event.entity.EntityDismountEvent;
 
 public class BoatListener implements Listener {
+    private boolean temporaryAllowDismount = false;
+
+    public static boolean allowDismount = false;
+
+    @EventHandler
+    public void onDismount(EntityDismountEvent event) {
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Player)) return;
+        Player player = (Player)entity;
+        if (!allowDismount && !temporaryAllowDismount) {
+            event.setCancelled(true);
+            int index = IceBoat.getPlayerIndex(player);
+            LevitationEffect levitation = IceBoat.instance.levitationTimers[index];
+            if (!LevitationEffect.isFinished(levitation)) {
+                levitation.cancel();
+            }
+        }
+    }
 
     @EventHandler
     public void onEntityTeleport(PlayerTeleportEvent event) {
         event.setCancelled(true);
         Player player = event.getPlayer();
         Entity vehicle = player.getVehicle();
+        temporaryAllowDismount = true;
         if (vehicle != null) {
             teleportInBoat((Boat)vehicle, player, event.getTo());
+            teleportEffect(event.getTo(), player);
         }
+        temporaryAllowDismount = false;
     }
 
     @EventHandler
@@ -50,8 +71,6 @@ public class BoatListener implements Listener {
 
     @EventHandler
     public void useItem(PlayerDropItemEvent event) {
-        BukkitScheduler scheduler = Bukkit.getScheduler();
-
         Player player = event.getPlayer();
         if (!player.isInsideVehicle()) return;
 
@@ -60,38 +79,25 @@ public class BoatListener implements Listener {
         Entity vehicle = player.getVehicle();
 
         if(item == Material.FEATHER){
-            if (!vehicle.isOnGround()) {
-                Vector v = vehicle.getVelocity();
-                v.setY(0);
-                vehicle.setVelocity(v);
-            }
-            vehicle.setGravity(false);
-
-            BukkitTask task = scheduler.runTaskLater(IceBoat.instance, () -> {
-                vehicle.setGravity(true);
-            }, 100L);
-
             int index = IceBoat.getPlayerIndex(player);
-            BukkitTask previous = IceBoat.instance.levitationTimers[index];
-            if (previous != null) {
+            LevitationEffect previous = IceBoat.instance.levitationTimers[index];
+            if (!LevitationEffect.isFinished(previous)) {
                 previous.cancel();
             }
-            IceBoat.instance.levitationTimers[index] = task;
-
-            event.getItemDrop().remove();
+            IceBoat.instance.levitationTimers[index] = new LevitationEffect(vehicle, player).run();
 
         } else if (item == Material.ENDER_PEARL) {
             if (vehicle.isOnGround()) {
                 event.setCancelled(true);
                 return;
             }
+            temporaryAllowDismount = true;
 
             int index = IceBoat.getPlayerIndex(player);
             Location location = IceBoat.instance.lastSafeLocation[index];
 
             teleportInBoat((Boat)vehicle, player, location);
-
-            event.getItemDrop().remove();
+            teleportEffect(location, player);
 
         } else if (item == Material.INK_SAC) {
             for (Player other : player.getWorld().getPlayers()) {
@@ -99,9 +105,12 @@ public class BoatListener implements Listener {
                     other.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 100, 0, true, true, false));
                 }
             }
-
-            event.getItemDrop().remove();
         }
+
+        int amount = event.getItemDrop().getItemStack().getAmount();
+        if (amount > 1) player.getInventory().addItem(new ItemStack(item, amount-1));
+
+        event.getItemDrop().remove();
     }
 
     public void teleportInBoat(Boat old, Player player, Location location) {
@@ -111,5 +120,20 @@ public class BoatListener implements Listener {
         old.remove();
         player.teleport(location);
         newVehicle.addPassenger(player);
+    }
+
+    public void teleportEffect(Location location, Player player) {
+        Location up = location.clone().add(0,0.5,0);
+        playSound(player, Sound.ENTITY_ENDERMAN_TELEPORT, location);
+        player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, up, 50);
+    }
+
+    public static void playSound(Player player, Sound sound, Location location) {
+        player.playSound(location, sound, 1000, 1);
+        for (Player other : player.getWorld().getPlayers()) {
+            if (other != player) {
+                other.playSound(location, sound, 10, 1);
+            }
+        }
     }
 }

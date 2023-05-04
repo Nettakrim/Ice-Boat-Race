@@ -34,6 +34,7 @@ public class BezierPath extends Path {
     private BezierPath(End entrance, Vector2f controlPoint, End exit) {
         super(entrance, exit);
         this.controlPoint = controlPoint;
+        this.approximation = createApproximation();
     }
 
     private final Vector2f controlPoint;
@@ -99,8 +100,8 @@ public class BezierPath extends Path {
     }
 
     @Override
-    public Approximation getApproximation() {
-        Vector2f apexApprox = FloatMath.lerp(FloatMath.lerp(entrance.point, controlPoint, 0.75f), FloatMath.lerp(exit.point, controlPoint, 0.75f), 0.5f);
+    protected Approximation createApproximation() {
+        Vector2f apexApprox = FloatMath.lerp(FloatMath.lerp(entrance.point, exit.point, 0.5f), controlPoint, 0.75f);
         int minX = (int)Math.min(Math.min(entrance.point.x, exit.point.x), controlPoint.x);
         int minY = (int)Math.min(Math.min(entrance.point.y, exit.point.y), controlPoint.y);
         int maxX = (int)Math.max(Math.max(entrance.point.x, exit.point.x), controlPoint.x);

@@ -12,6 +12,7 @@ import org.bukkit.entity.Boat;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.joml.Vector2f;
 
@@ -20,7 +21,6 @@ import com.nettakrim.ice_boat.commands.StartCommand;
 import com.nettakrim.ice_boat.paths.BezierPath;
 import com.nettakrim.ice_boat.paths.End;
 import com.nettakrim.ice_boat.paths.Path;
-import com.nettakrim.ice_boat.paths.Path.Approximation;
 
 public class IceBoat extends JavaPlugin {
     public static IceBoat instance;
@@ -45,6 +45,8 @@ public class IceBoat extends JavaPlugin {
         config.addDefault("turnZoneStart",   50D);
         config.addDefault("turnZoneEnd",     100D);
         config.addDefault("lengthScale",     40D);
+        config.addDefault("decaySpeed",      0.5D);
+        config.addDefault("decayDistance",     4);
         config.options().copyDefaults(true);
         saveConfig();
     }
@@ -59,23 +61,40 @@ public class IceBoat extends JavaPlugin {
         (End end, float lengthScale) -> BezierPath.buildRandom(random, end, lengthScale)
     };
 
-    public BukkitTask[] levitationTimers;
+    public LevitationEffect[] levitationTimers;
     public Location[] lastSafeLocation;
     public ArrayList<UUID> playerIndexes;
+    public BukkitTask pathDecay;
 
     public void start(World world) {
         height = config.getInt("startHeight");
         paths = new ArrayList<Path>();
         int players = world.getPlayerCount();
-        levitationTimers = new BukkitTask[players];
+        levitationTimers = new LevitationEffect[players];
         lastSafeLocation = new Location[players];
         createPlayerIndexes(world, players);
         generateStart(world, players);
+
+        BukkitScheduler scheduler = Bukkit.getScheduler();
+        pathDecay = scheduler.runTaskTimer(instance, () -> {pathDecay(world);}, 0L, 0L);
     }
 
     public void clear(World world) {
         for (Path path : paths) {
             path.clear(world);
+        }
+        pathDecay.cancel();
+    }
+
+    public void pathDecay(World world) {
+        float decaySpeed = (float)config.getDouble("decaySpeed");
+        int decayDistance = config.getInt("decayDistance");
+        for (Path path : paths) {
+            int offset = path.height-height;
+            if (offset >= decayDistance) {
+                float speed = decaySpeed*(offset/decayDistance);
+                path.decay(random, world, speed, offset-decayDistance);
+            }
         }
     }
 
@@ -176,12 +195,11 @@ public class IceBoat extends JavaPlugin {
 
     private boolean passDistanceCheck(Path path, float turnZoneStart, float turnZoneSize, float distanceThreshold) {
         int size = paths.size();
-        Approximation approximation = path.getApproximation();
         if (size >= 1) {
-            float minimumDistance = approximation.minimumDistance(paths.get(size-1).getApproximation());
+            float minimumDistance = path.approximation.minimumDistance(paths.get(size-1).approximation);
             if (minimumDistance < distanceThreshold) return false;
             if (size >= 2) {
-                minimumDistance = approximation.minimumDistance(paths.get(size-2).getApproximation());
+                minimumDistance = path.approximation.minimumDistance(paths.get(size-2).approximation);
                 if (minimumDistance < distanceThreshold) return false;
             }
         }
