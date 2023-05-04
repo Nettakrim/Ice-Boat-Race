@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Boat;
@@ -18,6 +19,7 @@ import org.joml.Vector2f;
 
 import com.nettakrim.ice_boat.commands.ResetCommand;
 import com.nettakrim.ice_boat.commands.StartCommand;
+import com.nettakrim.ice_boat.items.LevitationEffect;
 import com.nettakrim.ice_boat.paths.BezierPath;
 import com.nettakrim.ice_boat.paths.End;
 import com.nettakrim.ice_boat.paths.Path;
@@ -51,7 +53,7 @@ public class IceBoat extends JavaPlugin {
         saveConfig();
     }
 
-    private Random random = new Random();
+    public Random random = new Random();
     private int height;
     private ArrayList<Path> paths;
 
@@ -212,5 +214,20 @@ public class IceBoat extends JavaPlugin {
         float length = path.exit.point.length();
 
         return angle < FloatMath.clamp(1-(length-safeZone)/turnWidth, -0.5f, 1);
+    }
+
+    public static void playSoundGloballyToPlayer(Player player, Sound sound, Location location) {
+        player.playSound(location, sound, 1000, 1);
+        for (Player other : player.getWorld().getPlayers()) {
+            if (other != player) {
+                other.playSound(location, sound, 10, 1);
+            }
+        }
+    }
+
+    public static void playSoundLocallyToAll(World world, Sound sound, Location location) {
+        for (Player player : world.getPlayers()) {
+            player.playSound(location, sound, 5, 1);
+        }
     }
 }

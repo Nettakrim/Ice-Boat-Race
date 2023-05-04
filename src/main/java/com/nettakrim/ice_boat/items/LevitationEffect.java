@@ -1,4 +1,4 @@
-package com.nettakrim.ice_boat;
+package com.nettakrim.ice_boat.items;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Particle;
@@ -9,21 +9,26 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
+import com.nettakrim.ice_boat.IceBoat;
+
 public class LevitationEffect {
     private final Entity vehicle;
     private final Player player;
 
-    private BukkitTask endTask;
+    private long duration;
     private BukkitTask loopTask;
 
     private boolean finished;
 
-    public LevitationEffect(Entity vehicle, Player player) {
+    public LevitationEffect(Entity vehicle, Player player, long duration) {
         this.vehicle = vehicle;
         this.player = player;
+        run(duration);
     }
 
-    public LevitationEffect run() {
+    public void run(long duration) {
+        this.duration = duration;
+
         if (!vehicle.isOnGround()) {
             Vector v = vehicle.getVelocity();
             v.setY(0);
@@ -32,30 +37,31 @@ public class LevitationEffect {
 
         vehicle.setGravity(false);
 
-        BoatListener.playSound(player, Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, player.getLocation());
-
-        endTask = Bukkit.getScheduler().runTaskLater(IceBoat.instance, () -> {
-            end();
-            loopTask.cancel();
-        }, 100L);
+        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, player.getLocation());
 
         World world = player.getWorld();
 
-        loopTask = Bukkit.getScheduler().runTaskTimer(IceBoat.instance, () -> {
-            world.spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 0, 0, 0.1, 0);
+        this.loopTask = Bukkit.getScheduler().runTaskTimer(IceBoat.instance, () -> {
+            loop(world);
         }, 0L, 0L);
+    }
 
-        return this;
+    public void loop(World world) {
+        world.spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 0, 0, 0.1, 0);
+        duration--;
+        if (duration <= 0) {
+            loopTask.cancel();
+            end();
+        }
     }
 
     public void end() {
         vehicle.setGravity(true);
-        BoatListener.playSound(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation());
+        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation());
         finished = true;
     }
 
     public void cancel() {
-        endTask.cancel();
         loopTask.cancel();
         end();
     }

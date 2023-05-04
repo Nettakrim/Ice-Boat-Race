@@ -15,9 +15,10 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.spigotmc.event.entity.EntityDismountEvent;
+
+import com.nettakrim.ice_boat.items.BlindnessEffect;
+import com.nettakrim.ice_boat.items.LevitationEffect;
 
 public class BoatListener implements Listener {
     private boolean temporaryAllowDismount = false;
@@ -84,7 +85,7 @@ public class BoatListener implements Listener {
             if (!LevitationEffect.isFinished(previous)) {
                 previous.cancel();
             }
-            IceBoat.instance.levitationTimers[index] = new LevitationEffect(vehicle, player).run();
+            IceBoat.instance.levitationTimers[index] = new LevitationEffect(vehicle, player, 100L);
 
         } else if (item == Material.ENDER_PEARL) {
             if (vehicle.isOnGround()) {
@@ -100,11 +101,8 @@ public class BoatListener implements Listener {
             teleportEffect(location, player);
 
         } else if (item == Material.INK_SAC) {
-            for (Player other : player.getWorld().getPlayers()) {
-                if (other != player && other.getLocation().distance(player.getLocation()) < 10) {
-                    other.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 100, 0, true, true, false));
-                }
-            }
+            new BlindnessEffect(player, 15L, 300L);
+
         }
 
         int amount = event.getItemDrop().getItemStack().getAmount();
@@ -124,16 +122,7 @@ public class BoatListener implements Listener {
 
     public void teleportEffect(Location location, Player player) {
         Location up = location.clone().add(0,0.5,0);
-        playSound(player, Sound.ENTITY_ENDERMAN_TELEPORT, location);
+        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location);
         player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, up, 50);
-    }
-
-    public static void playSound(Player player, Sound sound, Location location) {
-        player.playSound(location, sound, 1000, 1);
-        for (Player other : player.getWorld().getPlayers()) {
-            if (other != player) {
-                other.playSound(location, sound, 10, 1);
-            }
-        }
     }
 }
