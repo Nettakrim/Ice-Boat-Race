@@ -25,6 +25,9 @@ import org.bukkit.scheduler.BukkitTask;
 import org.joml.Vector2f;
 
 import com.nettakrim.ice_boat.items.LevitationEffect;
+import com.nettakrim.ice_boat.listeners.BoatListener;
+import com.nettakrim.ice_boat.listeners.ConnectionListener;
+import com.nettakrim.ice_boat.listeners.ItemListener;
 import com.nettakrim.ice_boat.paths.BezierPath;
 import com.nettakrim.ice_boat.paths.End;
 import com.nettakrim.ice_boat.paths.Path;
@@ -36,6 +39,8 @@ public class IceBoat extends JavaPlugin {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(new BoatListener(), this);
+        getServer().getPluginManager().registerEvents(new ItemListener(), this);
+        getServer().getPluginManager().registerEvents(new ConnectionListener(), this);
 
         instance = this;
 
@@ -76,7 +81,7 @@ public class IceBoat extends JavaPlugin {
     public static GameState gameState = GameState.LOBBY;
     public ArrayList<Player> players;
 
-    enum GameState {
+    public enum GameState {
         LOBBY,
         WAITING,
         PLAYING,
@@ -132,10 +137,21 @@ public class IceBoat extends JavaPlugin {
         location.add(0,0.5,0);
         IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true);
         world.spawnParticle(Particle.REVERSE_PORTAL, location, 50);
+
+        progress.addPlayer(player);
+        player.setGameMode(GameMode.ADVENTURE);
     }
 
     public void startRound(World world) {
         gameState = GameState.WAITING;
+
+        if (waitingBoats != null) {
+            for (Boat boat : waitingBoats) {
+                if (boat.getPassengers().size() == 0) {
+                    boat.remove();
+                }
+            }
+        }
 
         players = new ArrayList<Player>();
         waitingBoats = new ArrayList<Boat>();
@@ -150,17 +166,10 @@ public class IceBoat extends JavaPlugin {
 
         if (progress == null) {
             progress = Bukkit.createBossBar("Sit in a Boat!", BarColor.GREEN, BarStyle.SOLID);
-            for (Player player : world.getPlayers()) {
-                progress.addPlayer(player);
-            }
         } else {
             progress.setTitle("Sit in a Boat!");
             progress.setVisible(true);
             progress.setProgress(1);
-        }
-
-        for (Player player : world.getPlayers()) {
-            player.setGameMode(GameMode.ADVENTURE);
         }
     }
 
@@ -251,9 +260,11 @@ public class IceBoat extends JavaPlugin {
         BukkitScheduler scheduler = Bukkit.getScheduler();
         scheduler.runTaskLater(instance, () -> {returnToLobby(world);}, 100L);
 
-        LevitationEffect levitation = levitationTimers[getPlayerIndex(winner)];
-        if (!LevitationEffect.isFinished(levitation)) {
-            levitation.cancel(false);
+        if (playerIndexes != null) {
+            LevitationEffect levitation = levitationTimers[getPlayerIndex(winner)];
+            if (!LevitationEffect.isFinished(levitation)) {
+                levitation.cancel(false);
+            }
         }
 
         Location location = winner.getLocation();
@@ -434,18 +445,22 @@ public class IceBoat extends JavaPlugin {
 
     public void killIfLowEnough(double testHeight, Player player) {
         if (testHeight < height-deathDistance) {
-            if (player.isInsideVehicle()) player.getVehicle().remove();
-            player.setGameMode(GameMode.SPECTATOR);
-            players.remove(player);
-            World world = player.getWorld();
-            world.spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 50, 0, 0, 0, 0.5, null, true);
-            world.spawnParticle(Particle.EXPLOSION_LARGE, player.getLocation(), 10, 1, 1, 1, 1, null, true);
-            playSoundLocallyToAll(world, Sound.ENTITY_GENERIC_EXPLODE, player.getLocation());
-            if (players.size() == 1) {
-                endRound(world, players.get(0));
-            } else if (players.size() == 0) {
-                endRound(world, player);
-            }
+            killPlayer(player);
+        }
+    }
+
+    public void killPlayer(Player player) {
+        if (player.isInsideVehicle()) player.getVehicle().remove();
+        player.setGameMode(GameMode.SPECTATOR);
+        players.remove(player);
+        World world = player.getWorld();
+        world.spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 50, 0, 0, 0, 0.5, null, true);
+        world.spawnParticle(Particle.EXPLOSION_LARGE, player.getLocation(), 10, 1, 1, 1, 1, null, true);
+        playSoundLocallyToAll(world, Sound.ENTITY_GENERIC_EXPLODE, player.getLocation());
+        if (players.size() == 1) {
+            endRound(world, players.get(0));
+        } else if (players.size() == 0) {
+            endRound(world, player);
         }
     }
 
