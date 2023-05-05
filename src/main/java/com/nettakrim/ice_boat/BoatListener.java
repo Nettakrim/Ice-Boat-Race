@@ -11,6 +11,8 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -159,5 +161,12 @@ public class BoatListener implements Listener {
         Location up = location.clone().add(0,0.5,0);
         IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true);
         player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, up, 50);
+    }
+
+    @EventHandler
+    public void onSuffocate(EntityDamageEvent event) {
+        if (IceBoat.gameState != GameState.PLAYING) return;
+
+        if (event.getCause().equals(DamageCause.SUFFOCATION)) event.setCancelled(true);
     }
 }
