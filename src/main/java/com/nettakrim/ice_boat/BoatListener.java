@@ -47,6 +47,10 @@ public class BoatListener implements Listener {
             IceBoat.instance.playerLeave(player);
         }
 
+        if (IceBoat.gameState == GameState.ENDING) {
+            event.setCancelled(true);
+        }
+
         if (IceBoat.gameState != GameState.PLAYING) return;
         
         if (!allowDismount && !temporaryAllowDismount) {
@@ -54,7 +58,7 @@ public class BoatListener implements Listener {
             int index = IceBoat.getPlayerIndex(player);
             LevitationEffect levitation = IceBoat.instance.levitationTimers[index];
             if (!LevitationEffect.isFinished(levitation)) {
-                levitation.cancel();
+                levitation.cancel(true);
             }
         }
     }
@@ -90,12 +94,18 @@ public class BoatListener implements Listener {
                 } else if (material == Material.LIME_WOOL) {
                     IceBoat.instance.endRound(player.getWorld(), player);
                 }
+            } else {
+                IceBoat.instance.killIfLowEnough(location.getY(), player);
             }
         }
     }
 
     @EventHandler
     public void useItem(PlayerDropItemEvent event) {
+        if (IceBoat.gameState == GameState.WAITING) {
+            event.setCancelled(true);
+            return;
+        }
         if (IceBoat.gameState != GameState.PLAYING) return;
         Player player = event.getPlayer();
         if (!player.isInsideVehicle()) return;
@@ -108,9 +118,9 @@ public class BoatListener implements Listener {
             int index = IceBoat.getPlayerIndex(player);
             LevitationEffect previous = IceBoat.instance.levitationTimers[index];
             if (!LevitationEffect.isFinished(previous)) {
-                previous.cancel();
+                previous.cancel(true);
             }
-            IceBoat.instance.levitationTimers[index] = new LevitationEffect(vehicle, player, 100L);
+            IceBoat.instance.levitationTimers[index] = new LevitationEffect(vehicle, player, IceBoat.config.getLong("levitationDuration"));
 
         } else if (item == Material.ENDER_PEARL) {
             if (vehicle.isOnGround()) {
@@ -126,7 +136,7 @@ public class BoatListener implements Listener {
             teleportEffect(location, player);
 
         } else if (item == Material.INK_SAC) {
-            new BlindnessEffect(player, 15L, 300L, 40);
+            new BlindnessEffect(player, 15L, IceBoat.config.getLong("blindnessLingerDuration"), IceBoat.config.getInt("blindnessEffectDuration"));
 
         }
 

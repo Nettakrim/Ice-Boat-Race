@@ -51,20 +51,22 @@ public class LevitationEffect {
         duration--;
         if (duration <= 0) {
             loopTask.cancel();
-            end();
+            end(true);
         }
     }
 
-    public void end() {
-        world.spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1, null);
+    public void end(boolean playSound) {
+        if (playSound) {
+            world.spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1, null);
+            IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation());
+        }
         vehicle.setGravity(true);
-        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation());
         finished = true;
     }
 
-    public void cancel() {
+    public void cancel(boolean playSound) {
         loopTask.cancel();
-        end();
+        end(playSound);
     }
 
     public static boolean isFinished(LevitationEffect effect) {
