@@ -81,13 +81,22 @@ public class BoatListener implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
-        if (IceBoat.gameState != GameState.PLAYING) return;
         Player player = event.getPlayer();
+
+        if (IceBoat.gameState == GameState.LOBBY) {
+            Location location = player.getLocation();
+            location.subtract(0, 1, 0);
+            if (location.getBlock().getType() == Material.PURPLE_WOOL) {
+                IceBoat.instance.teleportIntoGame(player);
+            }
+        }
+
+        if (IceBoat.gameState != GameState.PLAYING) return;
 
         if (player.isInsideVehicle()) {
             Location location = player.getLocation();
             location.subtract(0, 1, 0);
-            Block block = location.getWorld().getBlockAt(location);
+            Block block = location.getBlock();
             if (block.isSolid()) {
                 IceBoat.instance.generateIfLowEnough(location.getWorld(), block.getY(), player);
                 Material material = block.getType();

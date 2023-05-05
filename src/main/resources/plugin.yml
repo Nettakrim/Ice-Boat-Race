@@ -5,12 +5,3 @@ description: Procedurally Generating Ice Boat Minigame!
 api-version: '1.19'
 bootstrapper: com.nettakrim.ice_boat.IceBoatBootstrap
 loader: com.nettakrim.ice_boat.IceBoatLoader
-commands:
-    start:
-        description: "Starts Game"
-        usage: "/start"
-        permission: ice_boat.start
-    reset:
-        description: "Clears the Road"
-        usage: "/reset"
-        permission: ice_boat.reset

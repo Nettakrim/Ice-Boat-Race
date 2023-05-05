@@ -24,8 +24,6 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.joml.Vector2f;
 
-import com.nettakrim.ice_boat.commands.ResetCommand;
-import com.nettakrim.ice_boat.commands.StartCommand;
 import com.nettakrim.ice_boat.items.LevitationEffect;
 import com.nettakrim.ice_boat.paths.BezierPath;
 import com.nettakrim.ice_boat.paths.End;
@@ -38,9 +36,6 @@ public class IceBoat extends JavaPlugin {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(new BoatListener(), this);
-
-        this.getCommand("start").setExecutor(new StartCommand());
-        this.getCommand("reset").setExecutor(new ResetCommand());
 
         instance = this;
 
@@ -78,7 +73,7 @@ public class IceBoat extends JavaPlugin {
 
     public Random random = new Random();
 
-    public static GameState gameState;
+    public static GameState gameState = GameState.LOBBY;
     public ArrayList<Player> players;
 
     enum GameState {
@@ -114,10 +109,36 @@ public class IceBoat extends JavaPlugin {
 
     public BukkitTask winParticles;
 
+    private ArrayList<Boat> waitingBoats;
+
+    public void teleportIntoGame(Player player) {
+        World world = player.getWorld();
+        if (gameState != GameState.WAITING) {
+            startRound(world);
+        }
+  
+        int types = Boat.Type.values().length;
+
+        int boats = waitingBoats.size();
+        float position = (((boats+1)/2) * FloatMath.sign(boats%2) * 3);
+        int range = 10;
+        Location location = new Location(world, ((int)position)/range, height+2, position%range, -90, 0);
+
+        Boat boat = (Boat)world.spawnEntity(location, EntityType.BOAT);
+        boat.setBoatType(Boat.Type.values()[random.nextInt(types)]);
+
+        location.subtract(5, 0, 0);
+        player.teleport(location);
+        location.add(0,0.5,0);
+        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true);
+        world.spawnParticle(Particle.REVERSE_PORTAL, location, 50);
+    }
+
     public void startRound(World world) {
         gameState = GameState.WAITING;
 
         players = new ArrayList<Player>();
+        waitingBoats = new ArrayList<Boat>();
 
         startHeight = config.getInt("startHeight");
         endHeight  = config.getInt("endHeight");
@@ -125,8 +146,7 @@ public class IceBoat extends JavaPlugin {
         deathDistance = config.getInt("deathDistance");
 
         paths = new ArrayList<Path>();
-        int playerCount = world.getPlayerCount();
-        generateStart(world, playerCount);
+        generateStart(world);
 
         if (progress == null) {
             progress = Bukkit.createBossBar("Sit in a Boat!", BarColor.GREEN, BarStyle.SOLID);
@@ -191,6 +211,12 @@ public class IceBoat extends JavaPlugin {
         for (Player player : world.getPlayers()) {
             if (!player.isInsideVehicle()) {
                 player.setGameMode(GameMode.SPECTATOR);
+            }
+        }
+
+        for (Boat boat : waitingBoats) {
+            if (boat.getPassengers().size() == 0) {
+                boat.remove();
             }
         }
 
@@ -308,7 +334,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void generateStart(World world, int playerCount) {
+    public void generateStart(World world) {
         float radius = config.getInt("firstPathRadius");
 
         int expand = (int)radius+2;
@@ -328,21 +354,6 @@ public class IceBoat extends JavaPlugin {
 
         path.generate(world, radius, height, 0.75f, false);
         paths.add(path);
-
-        int types = Boat.Type.values().length;
-
-        for (float i = 0; i<playerCount; i++) {
-            float position = ((i-(((float)playerCount-1)/2f))/Math.max(playerCount-1, 1))*radius*1.4f;
-            Location location = new Location(world, 0, height+1, position, -90, 0);
-            Boat boat = (Boat)world.spawnEntity(location, EntityType.BOAT);
-            boat.setBoatType(Boat.Type.values()[random.nextInt(types)]);
-            location.subtract(5, 0, 0);
-            Player player = world.getPlayers().get((int)i);
-            player.teleport(location);
-            location.add(0,0.5,0);
-            IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, false);
-            player.spawnParticle(Particle.REVERSE_PORTAL, location, 50);
-        }
 
         height--;
     }
