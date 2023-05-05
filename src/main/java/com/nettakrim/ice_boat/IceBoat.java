@@ -48,7 +48,7 @@ public class IceBoat extends JavaPlugin {
         config.addDefault("turnZoneEnd",     100D);
         config.addDefault("lengthScale",     40D);
         config.addDefault("decaySpeed",      0.5D);
-        config.addDefault("decayDistance",     4);
+        config.addDefault("decayDistance",   4);
         config.options().copyDefaults(true);
         saveConfig();
     }

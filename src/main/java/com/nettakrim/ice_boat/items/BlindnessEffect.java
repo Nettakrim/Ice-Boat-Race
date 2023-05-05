@@ -15,6 +15,7 @@ import com.nettakrim.ice_boat.IceBoat;
 public class BlindnessEffect {
     private final Player owner;
     private final Location location;
+    private final World world;
 
     private long duration;
     private BukkitTask loopTask;
@@ -23,35 +24,37 @@ public class BlindnessEffect {
 
     private double rangeX = 3.5;
     private double rangeY = 1;
+    private int effectDuration;
 
-    public BlindnessEffect(Player player, long startup, long duration) {
+    public BlindnessEffect(Player player, long startup, long duration, int effectDuration) {
         this.owner = player;
         this.location = player.getLocation();
-        location.add(0, rangeY/2, 0);
-        run(startup, duration);
+        this.world = player.getWorld();
+        location.add(0, rangeY*1.5, 0);
+        run(startup, duration, effectDuration);
     }
 
-    public void run(long startup, long duration) {
+    public void run(long startup, long duration, int effectDuration) {
         this.duration = duration;
+        this.effectDuration = effectDuration;
 
         IceBoat.playSoundGloballyToPlayer(owner, Sound.ENTITY_SQUID_SQUIRT, location);
-
-        World world = owner.getWorld();
 
         world.spawnParticle(Particle.SQUID_INK, location, 50, 0.25, rangeY, 0.25, 0, null, true);
 
         this.loopTask = Bukkit.getScheduler().runTaskTimer(IceBoat.instance, () -> {
-            loop(world);
+            loop();
         }, startup, 0L);
     }
 
-    public void loop(World world) {
+    public void loop() {
         world.spawnParticle(Particle.SQUID_INK, location, 5, rangeX, rangeY, rangeX, 0, null, true);
 
         for (Player other : owner.getWorld().getPlayers()) {
+            if (other == owner) continue;
             Location offset = other.getLocation().subtract(location);
-            if (Math.abs(offset.getY()) < rangeY && Math.abs(offset.getX()) < rangeX) {
-                other.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 100, 0, true, true, false));
+            if (Math.abs(offset.getY()+rangeY) < rangeY && Math.abs(offset.getX()) < rangeX) {
+                other.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, effectDuration, 0, true, true, false));
             }
         }
 

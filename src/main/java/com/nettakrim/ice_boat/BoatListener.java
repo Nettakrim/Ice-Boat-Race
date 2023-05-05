@@ -101,7 +101,7 @@ public class BoatListener implements Listener {
             teleportEffect(location, player);
 
         } else if (item == Material.INK_SAC) {
-            new BlindnessEffect(player, 15L, 300L);
+            new BlindnessEffect(player, 15L, 300L, 40);
 
         }
 
