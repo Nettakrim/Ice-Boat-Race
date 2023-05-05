@@ -38,7 +38,7 @@ public class BlindnessEffect {
         this.duration = duration;
         this.effectDuration = effectDuration;
 
-        IceBoat.playSoundGloballyToPlayer(owner, Sound.ENTITY_SQUID_SQUIRT, location);
+        IceBoat.playSoundGloballyToPlayer(owner, Sound.ENTITY_SQUID_SQUIRT, location, true);
 
         world.spawnParticle(Particle.SQUID_INK, location, 50, 0.25, rangeY, 0.25, 0, null, true);
 

@@ -157,7 +157,7 @@ public class BoatListener implements Listener {
 
     public void teleportEffect(Location location, Player player) {
         Location up = location.clone().add(0,0.5,0);
-        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location);
+        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true);
         player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, up, 50);
     }
 }

@@ -129,12 +129,12 @@ public class IceBoat extends JavaPlugin {
         generateStart(world, playerCount);
 
         if (progress == null) {
-            progress = Bukkit.createBossBar("Sit in a boat!", BarColor.GREEN, BarStyle.SOLID);
+            progress = Bukkit.createBossBar("Sit in a Boat!", BarColor.GREEN, BarStyle.SOLID);
             for (Player player : world.getPlayers()) {
                 progress.addPlayer(player);
             }
         } else {
-            progress.setTitle("Sit in a boat!");
+            progress.setTitle("Sit in a Boat!");
             progress.setVisible(true);
             progress.setProgress(1);
         }
@@ -149,6 +149,7 @@ public class IceBoat extends JavaPlugin {
         if (players.size() == config.getInt("minPlayers")) {
             startCountdown(player.getWorld());
         }
+        player.getInventory().clear();
         player.getInventory().addItem(new ItemStack(Material.FEATHER, config.getInt("levitationItems")));
         player.getInventory().addItem(new ItemStack(Material.ENDER_PEARL, config.getInt("teleporterItems")));
         player.getInventory().addItem(new ItemStack(Material.INK_SAC, config.getInt("blindnessItems")));
@@ -234,9 +235,9 @@ public class IceBoat extends JavaPlugin {
         world.spawnParticle(Particle.VILLAGER_HAPPY, location, 64, 4, 2, 4, 0.1, null);
         playSoundLocallyToAll(world, Sound.ENTITY_PLAYER_LEVELUP, location);
 
-        winParticles.cancel();
+        if (winParticles != null) winParticles.cancel();
 
-        winner.getVehicle().setGravity(false);
+        if (winner.isInsideVehicle()) winner.getVehicle().setGravity(false);
         for (Player player : players) {
             if (player != winner) {
                 player.setGameMode(GameMode.SPECTATOR);
@@ -301,7 +302,7 @@ public class IceBoat extends JavaPlugin {
         if (testHeight <= height+1 && !gameNearlyOver) {
             float p = ((float)(height-endHeight))/((float)(startHeight-endHeight)-1);
             progress.setProgress(FloatMath.clamp(1-p, 0, 1));
-            progress.setTitle(player.getName()+" is in the lead");
+            progress.setTitle(player.getName()+" is in The Lead");
             if (height > endHeight) generate(world);
             else gameNearlyOver = true;
         }
@@ -336,7 +337,11 @@ public class IceBoat extends JavaPlugin {
             Boat boat = (Boat)world.spawnEntity(location, EntityType.BOAT);
             boat.setBoatType(Boat.Type.values()[random.nextInt(types)]);
             location.subtract(5, 0, 0);
-            world.getPlayers().get((int)i).teleport(location);
+            Player player = world.getPlayers().get((int)i);
+            player.teleport(location);
+            location.add(0,0.5,0);
+            IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, false);
+            player.spawnParticle(Particle.REVERSE_PORTAL, location, 50);
         }
 
         height--;
@@ -418,19 +423,24 @@ public class IceBoat extends JavaPlugin {
 
     public void killIfLowEnough(double testHeight, Player player) {
         if (testHeight < height-deathDistance) {
-            player.getVehicle().remove();
+            if (player.isInsideVehicle()) player.getVehicle().remove();
             player.setGameMode(GameMode.SPECTATOR);
             players.remove(player);
+            World world = player.getWorld();
+            world.spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 50, 0, 0, 0, 0.5, null, true);
+            world.spawnParticle(Particle.EXPLOSION_LARGE, player.getLocation(), 10, 1, 1, 1, 1, null, true);
+            playSoundLocallyToAll(world, Sound.ENTITY_GENERIC_EXPLODE, player.getLocation());
             if (players.size() == 1) {
-                endRound(player.getWorld(), players.get(0));
+                endRound(world, players.get(0));
             } else if (players.size() == 0) {
-                endRound(player.getWorld(), player);
+                endRound(world, player);
             }
         }
     }
 
-    public static void playSoundGloballyToPlayer(Player player, Sound sound, Location location) {
+    public static void playSoundGloballyToPlayer(Player player, Sound sound, Location location, boolean playLocallyToOthers) {
         player.playSound(location, sound, 1000, 1);
+        if (!playLocallyToOthers) return;
         for (Player other : player.getWorld().getPlayers()) {
             if (other != player) {
                 other.playSound(location, sound, 10, 1);

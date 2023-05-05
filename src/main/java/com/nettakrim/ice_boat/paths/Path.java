@@ -45,7 +45,7 @@ public abstract class Path {
 
         for (int x = approximation.minX-expand; x < approximation.maxX+expand; x++) {
             for (int y = approximation.minY-expand; y < approximation.maxY+expand; y++) {
-                boolean cutoff = ((exitX-x)*angleX)+((exitY-y)*angleY) < 0;
+                boolean cutoff = ((exitX-x)*angleX)+((exitY-y)*angleY) < 0 && Math.max(Math.abs(exitX-x), Math.abs(exitY-y)) < expand+1;
                 if (cutoff && !isFinishLine) continue;
                 float distance = getDistanceField(new Vector2f(x, y));
                 if (distance < radius) {
