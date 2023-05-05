@@ -232,7 +232,7 @@ public class IceBoat extends JavaPlugin {
 
         Location location = winner.getLocation();
         location.add(0,1,0);
-        world.spawnParticle(Particle.VILLAGER_HAPPY, location, 64, 4, 2, 4, 0.1, null);
+        world.spawnParticle(Particle.VILLAGER_HAPPY, location, 64, 4, 2, 4, 0.1, null, true);
         playSoundLocallyToAll(world, Sound.ENTITY_PLAYER_LEVELUP, location);
 
         if (winParticles != null) winParticles.cancel();
@@ -368,7 +368,7 @@ public class IceBoat extends JavaPlugin {
         Location location = new Location(world, path.exit.point.x+(path.exit.angle.x*radius*0.75f), height+2, path.exit.point.y+(path.exit.angle.y*radius*0.75f));
         if (isFinishLine) {
             winParticles = Bukkit.getScheduler().runTaskTimer(this, () -> {
-                world.spawnParticle(Particle.TOTEM, location, 3, 2, 0.25, 2, 0.1, null);
+                world.spawnParticle(Particle.TOTEM, location, 3, 2, 0.25, 2, 0.1, null, true);
             }, 0L, 0L);
         }
 
