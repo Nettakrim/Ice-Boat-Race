@@ -17,7 +17,12 @@ public class ConnectionListener implements Listener {
 	public void onQuit(PlayerQuitEvent event) {
 		Player player = event.getPlayer();
         if (IceBoat.instance.players.contains(player)) {
-            IceBoat.instance.killPlayer(player);
+            if (IceBoat.gameState == GameState.PLAYING) {
+                IceBoat.instance.killPlayer(player);
+            } else {
+                IceBoat.instance.waitingPlayerLeave(player);
+                if (player.isInsideVehicle()) player.getVehicle().remove();
+            }
         }
 	}
 

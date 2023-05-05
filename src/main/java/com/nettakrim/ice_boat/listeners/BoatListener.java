@@ -28,7 +28,7 @@ public class BoatListener implements Listener {
         Entity entity = event.getEntity();
         if (!(entity instanceof Player)) return;
         Player player = (Player)entity;
-        IceBoat.instance.playerJoin(player);
+        IceBoat.instance.waitingPlayerJoin(player);
     }
 
     @EventHandler
@@ -38,7 +38,7 @@ public class BoatListener implements Listener {
         Player player = (Player)entity;
 
         if (IceBoat.gameState == GameState.WAITING) {
-            IceBoat.instance.playerLeave(player);
+            IceBoat.instance.waitingPlayerLeave(player);
         }
 
         if (IceBoat.gameState == GameState.ENDING) {

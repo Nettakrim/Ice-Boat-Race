@@ -173,7 +173,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void playerJoin(Player player) {
+    public void waitingPlayerJoin(Player player) {
         players.add(player);
         if (players.size() == config.getInt("minPlayers")) {
             startCountdown(player.getWorld());
@@ -184,7 +184,7 @@ public class IceBoat extends JavaPlugin {
         player.getInventory().addItem(new ItemStack(Material.INK_SAC, config.getInt("blindnessItems")));
     }
 
-    public void playerLeave(Player player) {
+    public void waitingPlayerLeave(Player player) {
         if (players.size() == config.getInt("minPlayers")) {
             cancelCountdown();
         }
