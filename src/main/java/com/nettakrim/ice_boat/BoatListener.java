@@ -16,7 +16,9 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.spigotmc.event.entity.EntityDismountEvent;
+import org.spigotmc.event.entity.EntityMountEvent;
 
+import com.nettakrim.ice_boat.IceBoat.GameState;
 import com.nettakrim.ice_boat.items.BlindnessEffect;
 import com.nettakrim.ice_boat.items.LevitationEffect;
 
@@ -26,10 +28,27 @@ public class BoatListener implements Listener {
     public static boolean allowDismount = false;
 
     @EventHandler
+    public void onMount(EntityMountEvent event) {
+        if (IceBoat.gameState != GameState.WAITING) return;
+
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Player)) return;
+        Player player = (Player)entity;
+        IceBoat.instance.playerJoin(player);
+    }
+
+    @EventHandler
     public void onDismount(EntityDismountEvent event) {
         Entity entity = event.getEntity();
         if (!(entity instanceof Player)) return;
         Player player = (Player)entity;
+
+        if (IceBoat.gameState == GameState.WAITING) {
+            IceBoat.instance.playerLeave(player);
+        }
+
+        if (IceBoat.gameState != GameState.PLAYING) return;
+        
         if (!allowDismount && !temporaryAllowDismount) {
             event.setCancelled(true);
             int index = IceBoat.getPlayerIndex(player);
@@ -42,6 +61,7 @@ public class BoatListener implements Listener {
 
     @EventHandler
     public void onEntityTeleport(PlayerTeleportEvent event) {
+        if (IceBoat.gameState != GameState.PLAYING) return;
         event.setCancelled(true);
         Player player = event.getPlayer();
         Entity vehicle = player.getVehicle();
@@ -55,6 +75,7 @@ public class BoatListener implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
+        if (IceBoat.gameState != GameState.PLAYING) return;
         Player player = event.getPlayer();
 
         if (player.isInsideVehicle()) {
@@ -62,9 +83,12 @@ public class BoatListener implements Listener {
             location.subtract(0, 1, 0);
             Block block = location.getWorld().getBlockAt(location);
             if (block.isSolid()) {
-                IceBoat.instance.generateIfLowEnough(location.getWorld(), block.getY());
-                if (block.getType() == Material.BLUE_ICE) {
+                IceBoat.instance.generateIfLowEnough(location.getWorld(), block.getY(), player);
+                Material material = block.getType();
+                if (material == Material.BLUE_ICE) {
                     IceBoat.instance.lastSafeLocation[IceBoat.getPlayerIndex(player)] = player.getVehicle().getLocation();
+                } else if (material == Material.LIME_WOOL) {
+                    IceBoat.instance.endRound(player.getWorld(), player);
                 }
             }
         }
@@ -72,6 +96,7 @@ public class BoatListener implements Listener {
 
     @EventHandler
     public void useItem(PlayerDropItemEvent event) {
+        if (IceBoat.gameState != GameState.PLAYING) return;
         Player player = event.getPlayer();
         if (!player.isInsideVehicle()) return;
 

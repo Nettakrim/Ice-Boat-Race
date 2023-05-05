@@ -33,7 +33,7 @@ public abstract class Path {
 
     protected abstract Approximation createApproximation();
 
-    public void generate(World world, float radius, int height, float blueIceSize) {
+    public void generate(World world, float radius, int height, float blueIceSize, boolean isFinishLine) {
         this.expand = ((int)radius)+1;
         this.height = height;
         this.blocks = 0;
@@ -45,10 +45,18 @@ public abstract class Path {
 
         for (int x = approximation.minX-expand; x < approximation.maxX+expand; x++) {
             for (int y = approximation.minY-expand; y < approximation.maxY+expand; y++) {
-                if (((exitX-x)*angleX)+((exitY-y)*angleY) < 0) continue;
+                boolean cutoff = ((exitX-x)*angleX)+((exitY-y)*angleY) < 0;
+                if (cutoff && !isFinishLine) continue;
                 float distance = getDistanceField(new Vector2f(x, y));
                 if (distance < radius) {
-                    world.getBlockAt(x, height, y).setType(distance < radius*blueIceSize ? Material.BLUE_ICE : Material.PACKED_ICE);
+                    Material material = Material.PACKED_ICE;
+                    if (isFinishLine && cutoff) {
+                        material = Material.LIME_WOOL;
+                    } else if (distance < radius*blueIceSize) {
+                        material = Material.BLUE_ICE;
+                    }
+
+                    world.getBlockAt(x, height, y).setType(material);
                     blocks++;
                 }
             }

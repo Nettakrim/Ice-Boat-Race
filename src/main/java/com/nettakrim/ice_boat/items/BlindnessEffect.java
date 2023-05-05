@@ -50,7 +50,7 @@ public class BlindnessEffect {
     public void loop() {
         world.spawnParticle(Particle.SQUID_INK, location, 5, rangeX, rangeY, rangeX, 0, null, true);
 
-        for (Player other : owner.getWorld().getPlayers()) {
+        for (Player other : IceBoat.instance.players) {
             if (other == owner) continue;
             Location offset = other.getLocation().subtract(location);
             if (Math.abs(offset.getY()+rangeY) < rangeY && Math.abs(offset.getX()) < rangeX) {

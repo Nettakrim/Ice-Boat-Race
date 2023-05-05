@@ -13,7 +13,7 @@ public class StartCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
-            IceBoat.instance.start(player.getWorld());
+            IceBoat.instance.startRound(player.getWorld());
         }
 
         return true;

@@ -13,7 +13,7 @@ public class ResetCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
-            IceBoat.instance.clear(player.getWorld());
+            IceBoat.instance.endRound(player.getWorld(), player);
         }
 
         return true;
