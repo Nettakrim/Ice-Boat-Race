@@ -163,6 +163,7 @@ public class IceBoat extends JavaPlugin {
         endHeight  = config.getInt("endHeight");
         height = startHeight;
         deathDistance = config.getInt("deathDistance");
+        gameNearlyOver = false;
 
         paths = new ArrayList<Path>();
         generateStart(world);
