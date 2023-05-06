@@ -64,7 +64,8 @@ public class BoatListener implements Listener {
         if (IceBoat.gameState == GameState.LOBBY || IceBoat.gameState == GameState.WAITING) {
             Location location = player.getLocation();
             location.subtract(0, 1, 0);
-            if (location.getBlock().getType() == Material.PURPLE_WOOL) {
+            Material material = location.getBlock().getType();
+            if (material == Material.SEA_LANTERN || material == Material.WARPED_PLANKS) {
                 IceBoat.instance.teleportIntoGame(player);
             }
         }

@@ -20,6 +20,8 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.joml.Vector2f;
@@ -140,6 +142,7 @@ public class IceBoat extends JavaPlugin {
 
         progress.addPlayer(player);
         player.setGameMode(GameMode.ADVENTURE);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, -1, 0, true, false, false));
     }
 
     public void startRound(World world) {
@@ -278,6 +281,9 @@ public class IceBoat extends JavaPlugin {
         for (Player player : players) {
             if (player != winner) {
                 player.setGameMode(GameMode.SPECTATOR);
+                if (player.isInsideVehicle()) {
+                    player.getVehicle().remove();
+                }
             }
         }
     }
@@ -297,6 +303,7 @@ public class IceBoat extends JavaPlugin {
         for (Player player : world.getPlayers()) {
             player.setGameMode(GameMode.ADVENTURE);
             player.teleport(new Location(world, 0, height, 0));
+            player.getInventory().clear();
         }
     }
 
