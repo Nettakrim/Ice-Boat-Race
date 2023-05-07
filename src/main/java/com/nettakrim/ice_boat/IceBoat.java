@@ -76,7 +76,6 @@ public class IceBoat extends JavaPlugin {
         config.addDefault("blindnessEffectDuration", 40);
 
         config.addDefault("worldName", "world");
-        config.addDefault("defaultJoin", "world");
 
         config.options().copyDefaults(true);
         saveConfig();
