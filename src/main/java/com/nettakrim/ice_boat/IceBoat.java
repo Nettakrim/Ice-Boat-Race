@@ -37,6 +37,7 @@ import com.nettakrim.ice_boat.paths.Path;
 public class IceBoat extends JavaPlugin {
     public static IceBoat instance;
     public static FileConfiguration config;
+    public static World world;
 
     @Override
     public void onEnable() {
@@ -76,6 +77,8 @@ public class IceBoat extends JavaPlugin {
 
         config.options().copyDefaults(true);
         saveConfig();
+
+        world = Bukkit.getWorld(config.getString("worldName"));
     }
 
     public Random random = new Random();

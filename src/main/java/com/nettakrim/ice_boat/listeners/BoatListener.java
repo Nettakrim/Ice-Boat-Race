@@ -23,9 +23,11 @@ public class BoatListener implements Listener {
 
     @EventHandler
     public void onMount(EntityMountEvent event) {
+        Entity entity = event.getEntity();
+        if (entity.getWorld() != IceBoat.world) return;
+
         if (IceBoat.gameState != GameState.WAITING) return;
 
-        Entity entity = event.getEntity();
         if (!(entity instanceof Player)) return;
         Player player = (Player)entity;
         IceBoat.instance.waitingPlayerJoin(player);
@@ -34,6 +36,8 @@ public class BoatListener implements Listener {
     @EventHandler
     public void onDismount(EntityDismountEvent event) {
         Entity entity = event.getEntity();
+        if (entity.getWorld() != IceBoat.world) return;
+
         if (!(entity instanceof Player)) return;
         Player player = (Player)entity;
 
@@ -60,6 +64,7 @@ public class BoatListener implements Listener {
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
+        if (player.getWorld() != IceBoat.world) return;
 
         if (IceBoat.gameState == GameState.LOBBY || IceBoat.gameState == GameState.WAITING) {
             Location location = player.getLocation();
@@ -92,6 +97,9 @@ public class BoatListener implements Listener {
 
     @EventHandler
     public void onSuffocate(EntityDamageEvent event) {
+        Entity entity = event.getEntity();
+        if (entity.getWorld() != IceBoat.world) return;
+
         if (IceBoat.gameState != GameState.PLAYING) return;
 
         if (event.getCause().equals(DamageCause.SUFFOCATION)) event.setCancelled(true);

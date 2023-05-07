@@ -23,9 +23,11 @@ public class ItemListener implements Listener {
     
     @EventHandler
     public void onEntityTeleport(PlayerTeleportEvent event) {
+        Player player = event.getPlayer();
+        if (player.getWorld() != IceBoat.world) return;
+        
         if (IceBoat.gameState != GameState.PLAYING) return;
         event.setCancelled(true);
-        Player player = event.getPlayer();
         Entity vehicle = player.getVehicle();
         BoatListener.temporaryAllowDismount = true;
         if (vehicle != null) {
@@ -37,12 +39,14 @@ public class ItemListener implements Listener {
 
     @EventHandler
     public void useItem(PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        if (player.getWorld() != IceBoat.world) return;
+
         if (IceBoat.gameState == GameState.WAITING) {
             event.setCancelled(true);
             return;
         }
         if (IceBoat.gameState != GameState.PLAYING) return;
-        Player player = event.getPlayer();
         if (!player.isInsideVehicle()) return;
 
         Material item = event.getItemDrop().getItemStack().getType();
