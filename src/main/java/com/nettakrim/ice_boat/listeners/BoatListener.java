@@ -82,12 +82,12 @@ public class BoatListener implements Listener {
             location.subtract(0, 1, 0);
             Block block = location.getBlock();
             if (block.isSolid()) {
-                IceBoat.instance.generateIfLowEnough(location.getWorld(), block.getY(), player);
+                IceBoat.instance.generateIfLowEnough(block.getY(), player);
                 Material material = block.getType();
                 if (material == Material.BLUE_ICE) {
                     IceBoat.instance.lastSafeLocation[IceBoat.getPlayerIndex(player)] = player.getVehicle().getLocation();
                 } else if (material == Material.LIME_WOOL) {
-                    IceBoat.instance.endRound(player.getWorld(), player);
+                    IceBoat.instance.endRound(player);
                 }
             } else {
                 IceBoat.instance.killIfLowEnough(location.getY(), player);

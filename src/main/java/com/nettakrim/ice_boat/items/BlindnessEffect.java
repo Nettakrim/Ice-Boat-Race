@@ -59,7 +59,7 @@ public class BlindnessEffect {
         }
 
         if (IceBoat.instance.random.nextFloat() < 0.1f) {
-            IceBoat.playSoundLocallyToAll(world, Sound.ENTITY_SQUID_AMBIENT, location);
+            IceBoat.playSoundLocallyToAll(Sound.ENTITY_SQUID_AMBIENT, location);
         }
 
         duration--;
@@ -70,7 +70,7 @@ public class BlindnessEffect {
     }
 
     public void end() {
-        IceBoat.playSoundLocallyToAll(owner.getWorld(), Sound.BLOCK_CONDUIT_DEACTIVATE, location);
+        IceBoat.playSoundLocallyToAll(Sound.BLOCK_CONDUIT_DEACTIVATE, location);
         finished = true;
     }
 

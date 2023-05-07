@@ -122,9 +122,8 @@ public class IceBoat extends JavaPlugin {
     private ArrayList<Boat> waitingBoats;
 
     public void teleportIntoGame(Player player) {
-        World world = player.getWorld();
         if (gameState != GameState.WAITING) {
-            startRound(world);
+            startRound();
         }
   
         int types = Boat.Type.values().length;
@@ -148,7 +147,7 @@ public class IceBoat extends JavaPlugin {
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, -1, 0, true, false, false));
     }
 
-    public void startRound(World world) {
+    public void startRound() {
         gameState = GameState.WAITING;
 
         if (waitingBoats != null) {
@@ -169,7 +168,7 @@ public class IceBoat extends JavaPlugin {
         gameNearlyOver = false;
 
         paths = new ArrayList<Path>();
-        generateStart(world);
+        generateStart();
 
         if (progress == null) {
             progress = Bukkit.createBossBar("Sit in a Boat!", BarColor.GREEN, BarStyle.SOLID);
@@ -183,7 +182,7 @@ public class IceBoat extends JavaPlugin {
     public void waitingPlayerJoin(Player player) {
         players.add(player);
         if (players.size() == config.getInt("minPlayers")) {
-            startCountdown(player.getWorld());
+            startCountdown();
         }
         player.getInventory().clear();
         player.getInventory().addItem(new ItemStack(Material.FEATHER, config.getInt("levitationItems")));
@@ -199,12 +198,12 @@ public class IceBoat extends JavaPlugin {
         player.getInventory().clear();
     }
 
-    public void startCountdown(World world) {
+    public void startCountdown() {
         BukkitScheduler scheduler = Bukkit.getScheduler();
         countDownLength = config.getInt("countDownLength");
         countDown = countDownLength;
         countDownTask = scheduler.runTaskTimer(instance, () -> {
-            countdownLoop(world);
+            countdownLoop();
         }, 20L, 20L);
     }
 
@@ -213,15 +212,15 @@ public class IceBoat extends JavaPlugin {
         progress.setProgress(1);
     }
 
-    public void countdownLoop(World world) {
+    public void countdownLoop() {
         countDown -= 1;
         progress.setProgress(countDown/countDownLength);
         if (countDown == 0) {
-            countdownEnd(world);
+            countdownEnd();
         }
     }
 
-    public void countdownEnd(World world) {
+    public void countdownEnd() {
         gameState = GameState.PLAYING;
 
         for (Player player : world.getPlayers()) {
@@ -242,11 +241,11 @@ public class IceBoat extends JavaPlugin {
         createPlayerIndexes();
 
         BukkitScheduler scheduler = Bukkit.getScheduler();
-        pathDecay = scheduler.runTaskTimer(instance, () -> {pathDecay(world);}, 0L, 0L);
+        pathDecay = scheduler.runTaskTimer(instance, () -> {pathDecay();}, 0L, 0L);
 
         progress.setTitle("GO!");
         progress.setProgress(0);
-        generate(world);
+        generate();
         countDownTask.cancel();
 
         int expand = ((int)config.getInt("firstPathRadius"))+2;
@@ -258,14 +257,14 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void endRound(World world, Player winner) {
+    public void endRound(Player winner) {
         gameState = GameState.ENDING;
 
         progress.setTitle(winner.getName()+" Won !");
         if (pathDecay != null) pathDecay.cancel();
 
         BukkitScheduler scheduler = Bukkit.getScheduler();
-        scheduler.runTaskLater(instance, () -> {returnToLobby(world);}, 100L);
+        scheduler.runTaskLater(instance, () -> {returnToLobby();}, 100L);
 
         if (playerIndexes != null) {
             LevitationEffect levitation = levitationTimers[getPlayerIndex(winner)];
@@ -277,7 +276,7 @@ public class IceBoat extends JavaPlugin {
         Location location = winner.getLocation();
         location.add(0,1,0);
         world.spawnParticle(Particle.VILLAGER_HAPPY, location, 64, 4, 2, 4, 0.1, null, true);
-        playSoundLocallyToAll(world, Sound.ENTITY_PLAYER_LEVELUP, location);
+        playSoundLocallyToAll(Sound.ENTITY_PLAYER_LEVELUP, location);
 
         if (winParticles != null) winParticles.cancel();
 
@@ -292,7 +291,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void returnToLobby(World world) {
+    public void returnToLobby() {
         gameState = GameState.LOBBY;
         for (Path path : paths) {
             path.clear(world);
@@ -311,7 +310,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void pathDecay(World world) {
+    public void pathDecay() {
         float decaySpeed = (float)config.getDouble("decaySpeed");
         int decayDistance = config.getInt("decayDistance");
         for (Path path : paths) {
@@ -346,17 +345,17 @@ public class IceBoat extends JavaPlugin {
         return pathBuilders[random.nextInt(pathBuilders.length)];
     }
 
-    public void generateIfLowEnough(World world, int testHeight, Player player) {
+    public void generateIfLowEnough(int testHeight, Player player) {
         if (testHeight <= height+1 && !gameNearlyOver) {
             float p = ((float)(height-endHeight))/((float)(startHeight-endHeight)-1);
             progress.setProgress(FloatMath.clamp(1-p, 0, 1));
             progress.setTitle(player.getName()+" is in The Lead");
-            if (height > endHeight) generate(world);
+            if (height > endHeight) generate();
             else gameNearlyOver = true;
         }
     }
 
-    public void generateStart(World world) {
+    public void generateStart() {
         float radius = config.getInt("firstPathRadius");
 
         int expand = (int)radius+2;
@@ -380,7 +379,7 @@ public class IceBoat extends JavaPlugin {
         height--;
     }
 
-    public void generate(World world) {
+    public void generate() {
         float radiusStart = (float)config.getDouble("pathRadiusStart");
         float radiusEnd = (float)config.getDouble("pathRadiusEnd");
         float radiusShrink = (float)config.getDouble("radiusShrink");
@@ -464,14 +463,13 @@ public class IceBoat extends JavaPlugin {
         if (player.isInsideVehicle()) player.getVehicle().remove();
         player.setGameMode(GameMode.SPECTATOR);
         players.remove(player);
-        World world = player.getWorld();
         world.spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 50, 0, 0, 0, 0.5, null, true);
         world.spawnParticle(Particle.EXPLOSION_LARGE, player.getLocation(), 10, 1, 1, 1, 1, null, true);
-        playSoundLocallyToAll(world, Sound.ENTITY_GENERIC_EXPLODE, player.getLocation());
+        playSoundLocallyToAll(Sound.ENTITY_GENERIC_EXPLODE, player.getLocation());
         if (players.size() == 1) {
-            endRound(world, players.get(0));
+            endRound(players.get(0));
         } else if (players.size() == 0) {
-            endRound(world, player);
+            endRound(player);
         }
     }
 
@@ -485,7 +483,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public static void playSoundLocallyToAll(World world, Sound sound, Location location) {
+    public static void playSoundLocallyToAll(Sound sound, Location location) {
         for (Player player : world.getPlayers()) {
             player.playSound(location, sound, 5, 1);
         }
