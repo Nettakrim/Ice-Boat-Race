@@ -294,7 +294,7 @@ public class IceBoat extends JavaPlugin {
             Location location = winner.getLocation();
             location.add(0,1,0);
             world.spawnParticle(Particle.VILLAGER_HAPPY, location, 64, 4, 2, 4, 0.1, null, true);
-            playSoundLocallyToAll(Sound.ENTITY_PLAYER_LEVELUP, location, 1f, 1f);
+            playSoundLocallyToAll(Sound.ENTITY_PLAYER_LEVELUP, location, 0.95f, 1.05f);
         }
 
         if (winParticles != null) winParticles.cancel();
