@@ -117,7 +117,7 @@ public class IceBoat extends JavaPlugin {
     private BukkitTask countDownTask;
     private float countDown;
     private float countDownLength;
-    private BossBar progress;
+    public BossBar progress;
 
     private boolean gameNearlyOver;
     private int deathDistance;
@@ -180,7 +180,6 @@ public class IceBoat extends JavaPlugin {
             progress = Bukkit.createBossBar("Sit in a Boat!", BarColor.GREEN, BarStyle.SOLID);
         } else {
             progress.setTitle("Sit in a Boat!");
-            progress.setVisible(true);
             progress.setProgress(1);
         }
     }
@@ -315,7 +314,7 @@ public class IceBoat extends JavaPlugin {
         for (Path path : paths) {
             path.clear(world);
         }
-        progress.setVisible(false);
+        progress.removeAll();
         double height = config.getDouble("spawnHeight");
         for (Player player : players) {
             if (player.isInsideVehicle()) {

@@ -49,6 +49,7 @@ public class ConnectionListener implements Listener {
             IceBoat.instance.waitingPlayerLeave(player);
             if (player.isInsideVehicle()) player.getVehicle().remove();
         }
+        IceBoat.instance.progress.removePlayer(player);
         BoatListener.temporaryAllowDismount = false;
     }
 
@@ -57,6 +58,7 @@ public class ConnectionListener implements Listener {
         if (IceBoat.gameState == GameState.PLAYING) {
             player.setGameMode(GameMode.SPECTATOR);
             player.teleport(new Location(player.getWorld(), 0, IceBoat.config.getInt("startHeight")+5, 0));
+            IceBoat.instance.progress.addPlayer(player);
         } else {
             player.setGameMode(GameMode.ADVENTURE);
             player.teleport(new Location(player.getWorld(), 0, IceBoat.config.getDouble("spawnHeight"), 0));
