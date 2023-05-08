@@ -34,6 +34,9 @@ import com.nettakrim.ice_boat.paths.BezierPath;
 import com.nettakrim.ice_boat.paths.End;
 import com.nettakrim.ice_boat.paths.Path;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+
 public class IceBoat extends JavaPlugin {
     public static IceBoat instance;
     public static FileConfiguration config;
@@ -137,6 +140,7 @@ public class IceBoat extends JavaPlugin {
 
         Boat boat = (Boat)world.spawnEntity(location, EntityType.BOAT);
         boat.setBoatType(Boat.Type.values()[random.nextInt(types)]);
+        waitingBoats.add(boat);
 
         location.subtract(5, 0, 0);
         player.teleport(location);
@@ -259,30 +263,43 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void endRound(Player winner) {
+    public void endRound(Player winner, boolean reachedFinishLine) {
         gameState = GameState.ENDING;
 
-        progress.setTitle(winner.getName()+" Won !");
+        if (winner != null) {
+            progress.setTitle(winner.getName()+" Won !");
+            TextComponent textComponent;
+            if (reachedFinishLine) {
+                textComponent = Component.text(winner.getName()).append(Component.text(" Reached the Finish Line!"));
+            } else {
+                textComponent = Component.text("Leaving ").append(Component.text(winner.getName())).append(Component.text(" As the Winner!"));
+            }
+            world.sendMessage(textComponent);
+        } else {
+            progress.setTitle("Game Over !");
+        }
         if (pathDecay != null) pathDecay.cancel();
 
         BukkitScheduler scheduler = Bukkit.getScheduler();
         scheduler.runTaskLater(instance, () -> {returnToLobby();}, 100L);
 
-        if (playerIndexes != null) {
+        if (playerIndexes != null && winner != null) {
             LevitationEffect levitation = levitationTimers[getPlayerIndex(winner)];
             if (!LevitationEffect.isFinished(levitation)) {
                 levitation.cancel(false);
             }
         }
 
-        Location location = winner.getLocation();
-        location.add(0,1,0);
-        world.spawnParticle(Particle.VILLAGER_HAPPY, location, 64, 4, 2, 4, 0.1, null, true);
-        playSoundLocallyToAll(Sound.ENTITY_PLAYER_LEVELUP, location);
+        if (winner != null) {
+            Location location = winner.getLocation();
+            location.add(0,1,0);
+            world.spawnParticle(Particle.VILLAGER_HAPPY, location, 64, 4, 2, 4, 0.1, null, true);
+            playSoundLocallyToAll(Sound.ENTITY_PLAYER_LEVELUP, location);
+        }
 
         if (winParticles != null) winParticles.cancel();
 
-        if (winner.isInsideVehicle()) winner.getVehicle().setGravity(false);
+        if (winner != null && winner.isInsideVehicle()) winner.getVehicle().setGravity(false);
         for (Player player : players) {
             if (player != winner) {
                 player.setGameMode(GameMode.SPECTATOR);
@@ -468,10 +485,14 @@ public class IceBoat extends JavaPlugin {
         world.spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 50, 0, 0, 0, 0.5, null, true);
         world.spawnParticle(Particle.EXPLOSION_LARGE, player.getLocation(), 10, 1, 1, 1, 1, null, true);
         playSoundLocallyToAll(Sound.ENTITY_GENERIC_EXPLODE, player.getLocation());
+
+        TextComponent textComponent = Component.text(player.getName()).append(Component.text(" Exploded!"));
+        world.sendMessage(textComponent);
+
         if (players.size() == 1) {
-            endRound(players.get(0));
+            endRound(players.get(0), false);
         } else if (players.size() == 0) {
-            endRound(player);
+            endRound(null, false);
         }
     }
 

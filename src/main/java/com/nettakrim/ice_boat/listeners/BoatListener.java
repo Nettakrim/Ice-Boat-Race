@@ -45,13 +45,13 @@ public class BoatListener implements Listener {
             IceBoat.instance.waitingPlayerLeave(player);
         }
 
-        if (IceBoat.gameState == GameState.ENDING) {
-            event.setCancelled(true);
-        }
-
-        if (IceBoat.gameState != GameState.PLAYING) return;
-        
         if (!temporaryAllowDismount) {
+            if (IceBoat.gameState == GameState.ENDING) {
+                event.setCancelled(true);
+            }
+
+            if (IceBoat.gameState != GameState.PLAYING) return;
+
             event.setCancelled(true);
             int index = IceBoat.getPlayerIndex(player);
             LevitationEffect levitation = IceBoat.instance.levitationTimers[index];
@@ -87,7 +87,7 @@ public class BoatListener implements Listener {
                 if (material == Material.BLUE_ICE) {
                     IceBoat.instance.lastSafeLocation[IceBoat.getPlayerIndex(player)] = player.getVehicle().getLocation();
                 } else if (material == Material.LIME_WOOL) {
-                    IceBoat.instance.endRound(player);
+                    IceBoat.instance.endRound(player, true);
                 }
             } else {
                 IceBoat.instance.killIfLowEnough(location.getY(), player);

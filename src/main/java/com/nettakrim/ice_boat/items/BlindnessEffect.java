@@ -55,6 +55,7 @@ public class BlindnessEffect {
             Location offset = other.getLocation().subtract(location);
             if (Math.abs(offset.getY()+rangeY) < rangeY && Math.abs(offset.getX()) < rangeX) {
                 other.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, effectDuration, 0, true, true, false));
+                other.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, effectDuration, 0, true, true, false));
             }
         }
 

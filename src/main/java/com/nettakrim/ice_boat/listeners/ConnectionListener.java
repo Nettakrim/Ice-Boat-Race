@@ -41,6 +41,7 @@ public class ConnectionListener implements Listener {
 
     private void removeFromGame(Player player) {
         if (!IceBoat.instance.players.contains(player)) return;
+        BoatListener.temporaryAllowDismount = true;
 
         if (IceBoat.gameState == GameState.PLAYING) {
             IceBoat.instance.killPlayer(player);
@@ -51,6 +52,7 @@ public class ConnectionListener implements Listener {
     }
 
     private void joinGame(Player player) {
+        BoatListener.temporaryAllowDismount = true;
         if (IceBoat.gameState == GameState.PLAYING) {
             player.setGameMode(GameMode.SPECTATOR);
             player.teleport(new Location(player.getWorld(), 0, IceBoat.config.getInt("startHeight")+5, 0));
