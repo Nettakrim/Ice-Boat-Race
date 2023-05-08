@@ -38,7 +38,7 @@ public class BlindnessEffect {
         this.duration = duration;
         this.effectDuration = effectDuration;
 
-        IceBoat.playSoundGloballyToPlayer(owner, Sound.ENTITY_SQUID_SQUIRT, location, true);
+        IceBoat.playSoundGloballyToPlayer(owner, Sound.ENTITY_SQUID_SQUIRT, location, true, 0.9f, 1.1f);
 
         world.spawnParticle(Particle.SQUID_INK, location, 50, 0.25, rangeY, 0.25, 0, null, true);
 
@@ -60,7 +60,7 @@ public class BlindnessEffect {
         }
 
         if (IceBoat.instance.random.nextFloat() < 0.1f) {
-            IceBoat.playSoundLocallyToAll(Sound.ENTITY_SQUID_AMBIENT, location);
+            IceBoat.playSoundLocallyToAll(Sound.ENTITY_SQUID_AMBIENT, location, 0.75f, 1.25f);
         }
 
         duration--;
@@ -71,7 +71,7 @@ public class BlindnessEffect {
     }
 
     public void end() {
-        IceBoat.playSoundLocallyToAll(Sound.BLOCK_CONDUIT_DEACTIVATE, location);
+        IceBoat.playSoundLocallyToAll(Sound.BLOCK_CONDUIT_DEACTIVATE, location, 0.9f, 1.1f);
         finished = true;
     }
 

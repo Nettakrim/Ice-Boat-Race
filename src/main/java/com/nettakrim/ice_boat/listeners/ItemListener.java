@@ -24,17 +24,17 @@ public class ItemListener implements Listener {
     @EventHandler
     public void onEntityTeleport(PlayerTeleportEvent event) {
         Player player = event.getPlayer();
-        if (player.getWorld() != IceBoat.world) return;
+        if (player.getWorld() != IceBoat.world || event.getTo().getWorld() != IceBoat.world) return;
         
         if (IceBoat.gameState != GameState.PLAYING) return;
-        event.setCancelled(true);
         Entity vehicle = player.getVehicle();
-        BoatListener.temporaryAllowDismount = true;
         if (vehicle != null) {
+            BoatListener.temporaryAllowDismount = true;
+            event.setCancelled(true);
             teleportInBoat((Boat)vehicle, player, event.getTo());
             teleportEffect(event.getTo(), player);
+            BoatListener.temporaryAllowDismount = false;
         }
-        BoatListener.temporaryAllowDismount = false;
     }
 
     @EventHandler
@@ -73,6 +73,7 @@ public class ItemListener implements Listener {
 
             teleportInBoat((Boat)vehicle, player, location);
             teleportEffect(location, player);
+            BoatListener.temporaryAllowDismount = false;
 
         } else if (item == Material.INK_SAC) {
             new BlindnessEffect(player, 15L, IceBoat.config.getLong("blindnessLingerDuration"), IceBoat.config.getInt("blindnessEffectDuration"));
@@ -96,7 +97,7 @@ public class ItemListener implements Listener {
 
     public void teleportEffect(Location location, Player player) {
         Location up = location.clone().add(0,0.5,0);
-        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true);
+        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true, 0.85f, 1.15f);
         player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, up, 50);
     }
 }

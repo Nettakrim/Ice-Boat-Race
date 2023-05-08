@@ -145,7 +145,7 @@ public class IceBoat extends JavaPlugin {
         location.subtract(5, 0, 0);
         player.teleport(location);
         location.add(0,0.5,0);
-        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true);
+        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true, 0.85f, 1.15f);
         world.spawnParticle(Particle.REVERSE_PORTAL, location, 50);
 
         progress.addPlayer(player);
@@ -272,7 +272,7 @@ public class IceBoat extends JavaPlugin {
             if (reachedFinishLine) {
                 textComponent = Component.text(winner.getName()).append(Component.text(" Reached the Finish Line!"));
             } else {
-                textComponent = Component.text("Leaving ").append(Component.text(winner.getName())).append(Component.text(" As the Winner!"));
+                textComponent = Component.text("Leaving ").append(Component.text(winner.getName())).append(Component.text(" as the Winner!"));
             }
             world.sendMessage(textComponent);
         } else {
@@ -294,7 +294,7 @@ public class IceBoat extends JavaPlugin {
             Location location = winner.getLocation();
             location.add(0,1,0);
             world.spawnParticle(Particle.VILLAGER_HAPPY, location, 64, 4, 2, 4, 0.1, null, true);
-            playSoundLocallyToAll(Sound.ENTITY_PLAYER_LEVELUP, location);
+            playSoundLocallyToAll(Sound.ENTITY_PLAYER_LEVELUP, location, 1f, 1f);
         }
 
         if (winParticles != null) winParticles.cancel();
@@ -369,7 +369,10 @@ public class IceBoat extends JavaPlugin {
             float p = ((float)(height-endHeight))/((float)(startHeight-endHeight)-1);
             progress.setProgress(FloatMath.clamp(1-p, 0, 1));
             progress.setTitle(player.getName()+" is in The Lead");
-            if (height > endHeight) generate();
+            if (height > endHeight) {
+                generate();
+                playSoundLocallyToAll(Sound.ENTITY_EXPERIENCE_ORB_PICKUP, player.getLocation(), 0.8f, 1.25f);
+            }
             else gameNearlyOver = true;
         }
     }
@@ -484,7 +487,7 @@ public class IceBoat extends JavaPlugin {
         players.remove(player);
         world.spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 50, 0, 0, 0, 0.5, null, true);
         world.spawnParticle(Particle.EXPLOSION_LARGE, player.getLocation(), 10, 1, 1, 1, 1, null, true);
-        playSoundLocallyToAll(Sound.ENTITY_GENERIC_EXPLODE, player.getLocation());
+        playSoundLocallyToAll(Sound.ENTITY_GENERIC_EXPLODE, player.getLocation(), 0.9f, 1.1f);
 
         TextComponent textComponent = Component.text(player.getName()).append(Component.text(" Exploded!"));
         world.sendMessage(textComponent);
@@ -496,19 +499,20 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public static void playSoundGloballyToPlayer(Player player, Sound sound, Location location, boolean playLocallyToOthers) {
-        player.playSound(location, sound, 1000, 1);
+    public static void playSoundGloballyToPlayer(Player player, Sound sound, Location location, boolean playLocallyToOthers, float minPitch, float maxPitch) {
+        float pitch = instance.random.nextFloat(minPitch, maxPitch);
+        player.playSound(location, sound, 1000, pitch);
         if (!playLocallyToOthers) return;
         for (Player other : player.getWorld().getPlayers()) {
             if (other != player) {
-                other.playSound(location, sound, 10, 1);
+                other.playSound(location, sound, 10, pitch);
             }
         }
     }
 
-    public static void playSoundLocallyToAll(Sound sound, Location location) {
+    public static void playSoundLocallyToAll(Sound sound, Location location, float minPitch, float maxPitch) {
         for (Player player : world.getPlayers()) {
-            player.playSound(location, sound, 5, 1);
+            player.playSound(location, sound, 5, instance.random.nextFloat(minPitch, maxPitch));
         }
     }
 }

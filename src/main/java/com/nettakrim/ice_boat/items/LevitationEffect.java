@@ -39,7 +39,7 @@ public class LevitationEffect {
 
         vehicle.setGravity(false);
 
-        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, player.getLocation(), true);
+        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, player.getLocation(), true, 0.95f, 1.05f);
 
         this.loopTask = Bukkit.getScheduler().runTaskTimer(IceBoat.instance, () -> {
             loop();
@@ -58,7 +58,7 @@ public class LevitationEffect {
     public void end(boolean playSound) {
         if (playSound) {
             world.spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1, null);
-            IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation(), true);
+            IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation(), true, 0.95f, 1.05f);
         }
         vehicle.setGravity(true);
         finished = true;
