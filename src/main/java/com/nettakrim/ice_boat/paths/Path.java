@@ -62,6 +62,7 @@ public abstract class Path {
         }
 
         if (isFinishLine) {
+            expand++;
             int winCircleBounds = ((int)(radius+0.5f))+1;
             float winCircle = (radius+0.5f)*(radius+0.5f);
             int offsetX = Math.round(exit.point.x + exit.angle.x);

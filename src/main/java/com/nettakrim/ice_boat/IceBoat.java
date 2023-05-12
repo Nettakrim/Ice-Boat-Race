@@ -219,6 +219,7 @@ public class IceBoat extends JavaPlugin {
         } else if (countDown <= 3) {
             for (Player player : players) {
                 player.sendTitlePart(TitlePart.TITLE, Component.text(countDown));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 5, random.nextFloat(1.5f, 1.6f)-(countDown/5f));
             }
         }
     }
@@ -231,6 +232,7 @@ public class IceBoat extends JavaPlugin {
                 player.setGameMode(GameMode.SPECTATOR);
             } else {
                 player.sendTitlePart(TitlePart.TITLE, Component.text("GO!"));
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 5, random.nextFloat(1.1f, 1.2f));
             }
         }
 
@@ -347,9 +349,11 @@ public class IceBoat extends JavaPlugin {
             progress.setTitle(player.getName()+" is in The Lead");
             if (height > endHeight) {
                 generate();
+                playSoundLocallyToAll(Sound.BLOCK_NOTE_BLOCK_CHIME, player.getLocation(), 0.8f, 1.25f);
+            } else {
+                gameNearlyOver = true;
                 playSoundLocallyToAll(Sound.ENTITY_EXPERIENCE_ORB_PICKUP, player.getLocation(), 0.8f, 1.25f);
             }
-            else gameNearlyOver = true;
         }
     }
 
