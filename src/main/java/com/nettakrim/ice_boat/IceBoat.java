@@ -48,7 +48,11 @@ public class IceBoat extends JavaPlugin {
 
         getConfig().options().copyDefaults(true);
         saveConfig();
+    }
 
+    @Override
+    public void reloadConfig() {
+        super.reloadConfig();
         world = Bukkit.getWorld(getConfig().getString("world.worldName"));
     }
 
