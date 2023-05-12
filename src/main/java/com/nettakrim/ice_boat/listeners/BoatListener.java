@@ -61,8 +61,8 @@ public class BoatListener implements Listener {
             event.setCancelled(true);
             int index = plugin.getPlayerIndex(player);
             LevitationEffect levitation = plugin.levitationTimers[index];
-            if (!LevitationEffect.isFinished(levitation)) {
-                levitation.cancel(true);
+            if (levitation != null && !levitation.isCancelled()) {
+                levitation.cancel();
             }
         }
     }

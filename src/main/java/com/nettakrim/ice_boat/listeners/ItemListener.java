@@ -69,10 +69,12 @@ public class ItemListener implements Listener {
         if(item == Material.FEATHER){
             int index = plugin.getPlayerIndex(player);
             LevitationEffect previous = plugin.levitationTimers[index];
-            if (!LevitationEffect.isFinished(previous)) {
-                previous.cancel(true);
+            if (previous != null && !previous.isCancelled()) {
+                previous.cancel();
             }
-            plugin.levitationTimers[index] = new LevitationEffect(plugin, vehicle, player, plugin.getConfig().getLong("items.levitationDuration"));
+            LevitationEffect levitation = new LevitationEffect(plugin, vehicle, player, plugin.getConfig().getLong("items.levitationDuration"));
+            plugin.levitationTimers[index] = levitation;
+            levitation.runTaskTimer(plugin, 0L, 0L);
 
         } else if (item == Material.ENDER_PEARL) {
             if (vehicle.isOnGround()) {
@@ -89,8 +91,8 @@ public class ItemListener implements Listener {
             plugin.temporaryAllowDismount = false;
 
         } else if (item == Material.INK_SAC) {
-            new BlindnessEffect(plugin, player, 15L, plugin.getConfig().getLong("items.blindnessLingerDuration"), plugin.getConfig().getInt("items.blindnessEffectDuration"));
-
+            BlindnessEffect blindness =  new BlindnessEffect(plugin, player, plugin.getConfig().getLong("items.blindnessLingerDuration"), plugin.getConfig().getInt("items.blindnessEffectDuration"));
+            blindness.runTaskTimer(plugin, 15L, 0L);
         }
 
         int amount = event.getItemDrop().getItemStack().getAmount();

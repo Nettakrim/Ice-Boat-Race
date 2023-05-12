@@ -282,8 +282,8 @@ public class IceBoat extends JavaPlugin {
 
         if (playerIndexes != null && winner != null) {
             LevitationEffect levitation = levitationTimers[getPlayerIndex(winner)];
-            if (!LevitationEffect.isFinished(levitation)) {
-                levitation.cancel(false);
+            if (levitation != null && !levitation.isCancelled()) {
+                levitation.cancelSilently();
             }
         }
 
@@ -322,7 +322,7 @@ public class IceBoat extends JavaPlugin {
         for (Player player : world.getPlayers()) {
             player.setGameMode(GameMode.ADVENTURE);
             Location location = new Location(world, 0.5, height, 0.5, random.nextFloat(360), 0);
-            location.add(location.getDirection().multiply(0.1));
+            location.subtract(location.getDirection().multiply(0.1));
             player.teleport(location);
             player.getInventory().clear();
         }
