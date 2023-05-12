@@ -1,0 +1,26 @@
+world:
+  worldName: world
+  spawnHeight: 301.0
+game:
+  countDownLength: 10
+  minPlayers: 2
+  startHeight: 250
+  endHeight: 230
+  deathDistance: 32
+  decaySpeed: 0.5
+  decayDistance: 4
+generation:
+  firstPathRadius: 15.0
+  pathRadiusStart: 12.0
+  pathRadiusEnd: 2.0
+  radiusShrink: 0.5
+  turnZoneStart: 50.0
+  turnZoneEnd: 100.0
+  lengthScale: 40.0
+items:
+  levitationItems: 4
+  levitationDuration: 100
+  teleporterItems: 5
+  blindnessItems: 2
+  blindnessLingerDuration: 300
+  blindnessEffectDuration: 40

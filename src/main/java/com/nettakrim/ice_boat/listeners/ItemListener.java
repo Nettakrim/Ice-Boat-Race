@@ -21,14 +21,27 @@ import com.nettakrim.ice_boat.items.LevitationEffect;
 
 public class ItemListener implements Listener {
     
+    private final IceBoat plugin;
+
+    public ItemListener(IceBoat plugin) {
+        this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
     @EventHandler
     public void onEntityTeleport(PlayerTeleportEvent event) {
         Player player = event.getPlayer();
-        if (player.getWorld() != IceBoat.world || event.getTo().getWorld() != IceBoat.world) return;
+        if (player.getWorld() != plugin.world || event.getTo().getWorld() != plugin.world) return;
         
-        if (IceBoat.gameState != GameState.PLAYING) return;
-        Entity vehicle = player.getVehicle();
-        if (vehicle != null) {
+        if (plugin.gameState != GameState.PLAYING) {
+            if (player.isInsideVehicle()) {
+                event.setCancelled(true);
+            }
+            return;
+        }
+        
+        if (player.isInsideVehicle()) {
+            Entity vehicle = player.getVehicle();
             BoatListener.temporaryAllowDismount = true;
             event.setCancelled(true);
             teleportInBoat((Boat)vehicle, player, event.getTo());
@@ -40,13 +53,13 @@ public class ItemListener implements Listener {
     @EventHandler
     public void useItem(PlayerDropItemEvent event) {
         Player player = event.getPlayer();
-        if (player.getWorld() != IceBoat.world) return;
+        if (player.getWorld() != plugin.world) return;
 
-        if (IceBoat.gameState == GameState.WAITING) {
+        if (plugin.gameState == GameState.WAITING) {
             event.setCancelled(true);
             return;
         }
-        if (IceBoat.gameState != GameState.PLAYING) return;
+        if (plugin.gameState != GameState.PLAYING) return;
         if (!player.isInsideVehicle()) return;
 
         Material item = event.getItemDrop().getItemStack().getType();
@@ -54,12 +67,12 @@ public class ItemListener implements Listener {
         Entity vehicle = player.getVehicle();
 
         if(item == Material.FEATHER){
-            int index = IceBoat.getPlayerIndex(player);
-            LevitationEffect previous = IceBoat.instance.levitationTimers[index];
+            int index = plugin.getPlayerIndex(player);
+            LevitationEffect previous = plugin.levitationTimers[index];
             if (!LevitationEffect.isFinished(previous)) {
                 previous.cancel(true);
             }
-            IceBoat.instance.levitationTimers[index] = new LevitationEffect(vehicle, player, IceBoat.config.getLong("levitationDuration"));
+            plugin.levitationTimers[index] = new LevitationEffect(plugin, vehicle, player, plugin.getConfig().getLong("items.levitationDuration"));
 
         } else if (item == Material.ENDER_PEARL) {
             if (vehicle.isOnGround()) {
@@ -68,15 +81,15 @@ public class ItemListener implements Listener {
             }
             BoatListener.temporaryAllowDismount = true;
 
-            int index = IceBoat.getPlayerIndex(player);
-            Location location = IceBoat.instance.lastSafeLocation[index];
+            int index = plugin.getPlayerIndex(player);
+            Location location = plugin.lastSafeLocation[index];
 
             teleportInBoat((Boat)vehicle, player, location);
             teleportEffect(location, player);
             BoatListener.temporaryAllowDismount = false;
 
         } else if (item == Material.INK_SAC) {
-            new BlindnessEffect(player, 15L, IceBoat.config.getLong("blindnessLingerDuration"), IceBoat.config.getInt("blindnessEffectDuration"));
+            new BlindnessEffect(plugin, player, 15L, plugin.getConfig().getLong("items.blindnessLingerDuration"), plugin.getConfig().getInt("items.blindnessEffectDuration"));
 
         }
 
@@ -97,7 +110,7 @@ public class ItemListener implements Listener {
 
     public void teleportEffect(Location location, Player player) {
         Location up = location.clone().add(0,0.5,0);
-        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true, 0.85f, 1.15f);
+        plugin.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true, 0.85f, 1.15f);
         player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, up, 50);
     }
 }

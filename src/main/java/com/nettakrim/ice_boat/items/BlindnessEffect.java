@@ -13,6 +13,9 @@ import org.bukkit.scheduler.BukkitTask;
 import com.nettakrim.ice_boat.IceBoat;
 
 public class BlindnessEffect {
+
+    private final IceBoat plugin;
+
     private final Player owner;
     private final Location location;
     private final World world;
@@ -26,7 +29,8 @@ public class BlindnessEffect {
     private double rangeY = 1;
     private int effectDuration;
 
-    public BlindnessEffect(Player player, long startup, long duration, int effectDuration) {
+    public BlindnessEffect(IceBoat plugin, Player player, long startup, long duration, int effectDuration) {
+        this.plugin = plugin;
         this.owner = player;
         this.location = player.getLocation();
         this.world = player.getWorld();
@@ -38,11 +42,11 @@ public class BlindnessEffect {
         this.duration = duration;
         this.effectDuration = effectDuration;
 
-        IceBoat.playSoundGloballyToPlayer(owner, Sound.ENTITY_SQUID_SQUIRT, location, true, 0.9f, 1.1f);
+        plugin.playSoundGloballyToPlayer(owner, Sound.ENTITY_SQUID_SQUIRT, location, true, 0.9f, 1.1f);
 
         world.spawnParticle(Particle.SQUID_INK, location, 50, 0.25, rangeY, 0.25, 0, null, true);
 
-        this.loopTask = Bukkit.getScheduler().runTaskTimer(IceBoat.instance, () -> {
+        this.loopTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             loop();
         }, startup, 0L);
     }
@@ -50,7 +54,7 @@ public class BlindnessEffect {
     public void loop() {
         world.spawnParticle(Particle.SQUID_INK, location, 5, rangeX, rangeY, rangeX, 0, null, true);
 
-        for (Player other : IceBoat.instance.players) {
+        for (Player other : plugin.players) {
             if (other == owner) continue;
             Location offset = other.getLocation().subtract(location);
             if (Math.abs(offset.getY()+rangeY) < rangeY && Math.abs(offset.getX()) < rangeX) {
@@ -59,8 +63,8 @@ public class BlindnessEffect {
             }
         }
 
-        if (IceBoat.instance.random.nextFloat() < 0.1f) {
-            IceBoat.playSoundLocallyToAll(Sound.ENTITY_SQUID_AMBIENT, location, 0.75f, 1.25f);
+        if (plugin.random.nextFloat() < 0.1f) {
+            plugin.playSoundLocallyToAll(Sound.ENTITY_SQUID_AMBIENT, location, 0.75f, 1.25f);
         }
 
         duration--;
@@ -71,7 +75,7 @@ public class BlindnessEffect {
     }
 
     public void end() {
-        IceBoat.playSoundLocallyToAll(Sound.BLOCK_CONDUIT_DEACTIVATE, location, 0.9f, 1.1f);
+        plugin.playSoundLocallyToAll(Sound.BLOCK_CONDUIT_DEACTIVATE, location, 0.9f, 1.1f);
         finished = true;
     }
 

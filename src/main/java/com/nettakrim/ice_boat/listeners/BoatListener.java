@@ -1,5 +1,6 @@
 package com.nettakrim.ice_boat.listeners;
 
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -21,40 +22,47 @@ public class BoatListener implements Listener {
 
     public static boolean temporaryAllowDismount = false;
 
+    private final IceBoat plugin;
+
+    public BoatListener(IceBoat plugin) {
+        this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
     @EventHandler
     public void onMount(EntityMountEvent event) {
         Entity entity = event.getEntity();
-        if (entity.getWorld() != IceBoat.world) return;
+        if (entity.getWorld() != plugin.world) return;
 
-        if (IceBoat.gameState != GameState.WAITING) return;
+        if (plugin.gameState != GameState.WAITING) return;
 
         if (!(entity instanceof Player)) return;
         Player player = (Player)entity;
-        IceBoat.instance.waitingPlayerJoin(player);
+        plugin.waitingPlayerJoin(player);
     }
 
     @EventHandler
     public void onDismount(EntityDismountEvent event) {
         Entity entity = event.getEntity();
-        if (entity.getWorld() != IceBoat.world) return;
+        if (entity.getWorld() != plugin.world) return;
 
         if (!(entity instanceof Player)) return;
         Player player = (Player)entity;
 
-        if (IceBoat.gameState == GameState.WAITING) {
-            IceBoat.instance.waitingPlayerLeave(player);
+        if (plugin.gameState == GameState.WAITING) {
+            plugin.waitingPlayerLeave(player);
         }
 
         if (!temporaryAllowDismount) {
-            if (IceBoat.gameState == GameState.ENDING) {
+            if (plugin.gameState == GameState.ENDING) {
                 event.setCancelled(true);
             }
 
-            if (IceBoat.gameState != GameState.PLAYING) return;
+            if (plugin.gameState != GameState.PLAYING) return;
 
             event.setCancelled(true);
-            int index = IceBoat.getPlayerIndex(player);
-            LevitationEffect levitation = IceBoat.instance.levitationTimers[index];
+            int index = plugin.getPlayerIndex(player);
+            LevitationEffect levitation = plugin.levitationTimers[index];
             if (!LevitationEffect.isFinished(levitation)) {
                 levitation.cancel(true);
             }
@@ -64,33 +72,34 @@ public class BoatListener implements Listener {
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (player.getWorld() != IceBoat.world) return;
+        if (player.getWorld() != plugin.world) return;
 
-        if (IceBoat.gameState == GameState.LOBBY || IceBoat.gameState == GameState.WAITING) {
-            Location location = player.getLocation();
-            location.subtract(0, 1, 0);
-            Material material = location.getBlock().getType();
-            if (material == Material.SEA_LANTERN || material == Material.WARPED_PLANKS) {
-                IceBoat.instance.teleportIntoGame(player);
+        Location location = player.getLocation();
+        location.subtract(0, 1, 0);
+        Block block = location.getBlock();
+        Material material = location.getBlock().getType();
+
+        if (material == Material.SEA_LANTERN || material == Material.WARPED_PLANKS) {
+            if (plugin.gameState == GameState.LOBBY || plugin.gameState == GameState.WAITING) {
+                plugin.teleportIntoGame(player);
+            } else {
+                player.setGameMode(GameMode.SPECTATOR);
+                player.teleport(new Location(player.getWorld(), 0, plugin.getConfig().getInt("game.startHeight")+5, 0));
             }
         }
 
-        if (IceBoat.gameState != GameState.PLAYING) return;
+        if (plugin.gameState != GameState.PLAYING) return;
 
         if (player.isInsideVehicle()) {
-            Location location = player.getLocation();
-            location.subtract(0, 1, 0);
-            Block block = location.getBlock();
             if (block.isSolid()) {
-                IceBoat.instance.generateIfLowEnough(block.getY(), player);
-                Material material = block.getType();
+                plugin.generateIfLowEnough(block.getY(), player);
                 if (material == Material.BLUE_ICE) {
-                    IceBoat.instance.lastSafeLocation[IceBoat.getPlayerIndex(player)] = player.getVehicle().getLocation();
+                    plugin.lastSafeLocation[plugin.getPlayerIndex(player)] = player.getVehicle().getLocation();
                 } else if (material == Material.LIME_WOOL) {
-                    IceBoat.instance.endRound(player, true);
+                    plugin.endRound(player, true);
                 }
             } else {
-                IceBoat.instance.killIfLowEnough(location.getY(), player);
+                plugin.killIfLowEnough(location.getY(), player);
             }
         }
     }
@@ -98,9 +107,9 @@ public class BoatListener implements Listener {
     @EventHandler
     public void onSuffocate(EntityDamageEvent event) {
         Entity entity = event.getEntity();
-        if (entity.getWorld() != IceBoat.world) return;
+        if (entity.getWorld() != plugin.world) return;
 
-        if (IceBoat.gameState != GameState.PLAYING) return;
+        if (plugin.gameState != GameState.PLAYING) return;
 
         if (event.getCause().equals(DamageCause.SUFFOCATION)) event.setCancelled(true);
     }

@@ -13,12 +13,20 @@ import com.nettakrim.ice_boat.IceBoat;
 import com.nettakrim.ice_boat.IceBoat.GameState;
 
 public class ConnectionListener implements Listener {
+
+    private final IceBoat plugin;
+
+    public ConnectionListener(IceBoat plugin) {
+        this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
     @EventHandler
     public void onChangedWorld(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
-        if (event.getFrom() == IceBoat.world) {
+        if (event.getFrom() == plugin.world) {
             removeFromGame(player);
-        } else if (player.getWorld() == IceBoat.world) {
+        } else if (player.getWorld() == plugin.world) {
             joinGame(player);
         }
     }
@@ -26,7 +34,7 @@ public class ConnectionListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        if (player.getWorld() == IceBoat.world) {
+        if (player.getWorld() == plugin.world) {
             joinGame(player);
         }
     }
@@ -34,35 +42,32 @@ public class ConnectionListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        if (player.getWorld() == IceBoat.world) {
+        if (player.getWorld() == plugin.world) {
             removeFromGame(player);
         }
     }
 
     private void removeFromGame(Player player) {
-        if (!IceBoat.instance.players.contains(player)) return;
+        plugin.progress.removePlayer(player);
+        if (!plugin.players.contains(player)) return;
         BoatListener.temporaryAllowDismount = true;
 
-        if (IceBoat.gameState == GameState.PLAYING) {
-            IceBoat.instance.killPlayer(player);
+        if (plugin.gameState == GameState.PLAYING) {
+            plugin.killPlayer(player);
         } else {
-            IceBoat.instance.waitingPlayerLeave(player);
+            plugin.waitingPlayerLeave(player);
             if (player.isInsideVehicle()) player.getVehicle().remove();
         }
-        IceBoat.instance.progress.removePlayer(player);
         BoatListener.temporaryAllowDismount = false;
     }
 
     private void joinGame(Player player) {
         BoatListener.temporaryAllowDismount = true;
-        if (IceBoat.gameState == GameState.PLAYING) {
-            player.setGameMode(GameMode.SPECTATOR);
-            player.teleport(new Location(player.getWorld(), 0, IceBoat.config.getInt("startHeight")+5, 0));
-            IceBoat.instance.progress.addPlayer(player);
-        } else {
-            player.setGameMode(GameMode.ADVENTURE);
-            player.teleport(new Location(player.getWorld(), 0, IceBoat.config.getDouble("spawnHeight"), 0));
+        if (plugin.gameState == GameState.PLAYING) {
+            plugin.progress.addPlayer(player);
         }
+        player.setGameMode(GameMode.ADVENTURE);
+        player.teleport(new Location(player.getWorld(), 0.5, plugin.getConfig().getDouble("world.spawnHeight"), 0.5));
         BoatListener.temporaryAllowDismount = false;
     }
 }

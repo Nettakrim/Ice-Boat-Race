@@ -14,7 +14,6 @@ import org.bukkit.World;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -36,62 +35,29 @@ import com.nettakrim.ice_boat.paths.Path;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.title.TitlePart;
 
 public class IceBoat extends JavaPlugin {
-    public static IceBoat instance;
-    public static FileConfiguration config;
-    public static World world;
+    public World world;
 
     @Override
     public void onEnable() {
-        getServer().getPluginManager().registerEvents(new BoatListener(), this);
-        getServer().getPluginManager().registerEvents(new ItemListener(), this);
-        getServer().getPluginManager().registerEvents(new ConnectionListener(), this);
+        new BoatListener(this);
+        new ItemListener(this);
+        new ConnectionListener(this);
 
-        instance = this;
-
-        config = this.getConfig();
-        //generation
-        config.addDefault("startHeight",     250);
-        config.addDefault("endHeight",       230);
-        config.addDefault("firstPathRadius", 15D);
-        config.addDefault("pathRadiusStart", 12D);
-        config.addDefault("pathRadiusEnd",   2D);
-        config.addDefault("radiusShrink",    0.5D);
-        config.addDefault("turnZoneStart",   50D);
-        config.addDefault("turnZoneEnd",     100D);
-        config.addDefault("lengthScale",     40D);
-        config.addDefault("decaySpeed",      0.5D);
-        config.addDefault("decayDistance",   4);
-
-        //gameplay
-        config.addDefault("countDownLength", 5);
-        config.addDefault("minPlayers",      2);
-        config.addDefault("spawnHeight",     320D);
-        config.addDefault("deathDistance",   32);
-
-        //items
-        config.addDefault("levitationItems",         4);
-        config.addDefault("levitationDuration",      100L);
-        config.addDefault("teleporterItems",         5);
-        config.addDefault("blindnessItems",          2);
-        config.addDefault("blindnessLingerDuration", 300L);
-        config.addDefault("blindnessEffectDuration", 40);
-
-        config.addDefault("worldName", "world");
-
-        config.options().copyDefaults(true);
+        getConfig().options().copyDefaults(true);
         saveConfig();
 
-        world = Bukkit.getWorld(config.getString("worldName"));
+        world = Bukkit.getWorld(getConfig().getString("world.worldName"));
     }
 
     public Random random = new Random();
 
-    public static GameState gameState = GameState.LOBBY;
+    public GameState gameState = GameState.LOBBY;
     public ArrayList<Player> players;
 
-    public enum GameState {
+    public static enum GameState {
         LOBBY,
         WAITING,
         PLAYING,
@@ -115,7 +81,7 @@ public class IceBoat extends JavaPlugin {
     public BukkitTask pathDecay;
 
     private BukkitTask countDownTask;
-    private float countDown;
+    private int countDown;
     private float countDownLength;
     public BossBar progress;
 
@@ -131,26 +97,34 @@ public class IceBoat extends JavaPlugin {
             startRound();
         }
   
-        int types = Boat.Type.values().length;
-
+        Location location;
         int boats = waitingBoats.size();
-        float position = (((boats+1)/2) * FloatMath.sign(boats%2) * 3);
-        int range = 10;
-        Location location = new Location(world, ((int)position)/range, height+2, position%range, -90, 0);
 
-        Boat boat = (Boat)world.spawnEntity(location, EntityType.BOAT);
-        boat.setBoatType(Boat.Type.values()[random.nextInt(types)]);
-        waitingBoats.add(boat);
+        if (boats < world.getPlayerCount()) {
+            int types = Boat.Type.values().length;
+            int b = boats%9;
+            float position = ((b+1)/2) * ((b%2)-0.5f) * 5;
+            location = new Location(world, (-2.5f*(boats/9))+2.5f, height+2, position+0.5f, -90, 0);
+            Boat boat = (Boat)world.spawnEntity(location, EntityType.BOAT);
+            boat.setBoatType(Boat.Type.values()[random.nextInt(types)]);
+            waitingBoats.add(boat);
+        } else {
+            location = waitingBoats.get(boats-1).getLocation();
+        }
 
         location.subtract(5, 0, 0);
         player.teleport(location);
         location.add(0,0.5,0);
-        IceBoat.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true, 0.85f, 1.15f);
+        playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true, 0.85f, 1.15f);
         world.spawnParticle(Particle.REVERSE_PORTAL, location, 50);
 
         progress.addPlayer(player);
         player.setGameMode(GameMode.ADVENTURE);
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, -1, 0, true, false, false));
+
+        if (countDownTask != null && !countDownTask.isCancelled()) {
+            setCountDownTime((int)(countDownLength/2), true);
+        }
     }
 
     public void startRound() {
@@ -167,10 +141,10 @@ public class IceBoat extends JavaPlugin {
         players = new ArrayList<Player>();
         waitingBoats = new ArrayList<Boat>();
 
-        startHeight = config.getInt("startHeight");
-        endHeight  = config.getInt("endHeight");
+        startHeight = getConfig().getInt("game.startHeight");
+        endHeight  = getConfig().getInt("game.endHeight");
         height = startHeight;
-        deathDistance = config.getInt("deathDistance");
+        deathDistance = getConfig().getInt("game.deathDistance");
         gameNearlyOver = false;
 
         paths = new ArrayList<Path>();
@@ -186,17 +160,23 @@ public class IceBoat extends JavaPlugin {
 
     public void waitingPlayerJoin(Player player) {
         players.add(player);
-        if (players.size() == config.getInt("minPlayers")) {
+        if (players.size() == getConfig().getInt("game.minPlayers")) {
             startCountdown();
         }
+        if (players.size() == world.getPlayerCount()) {
+            if (countDownTask == null || countDownTask.isCancelled()) {
+                startCountdown();
+            }
+            setCountDownTime(3, false);
+        }
         player.getInventory().clear();
-        player.getInventory().addItem(new ItemStack(Material.FEATHER, config.getInt("levitationItems")));
-        player.getInventory().addItem(new ItemStack(Material.ENDER_PEARL, config.getInt("teleporterItems")));
-        player.getInventory().addItem(new ItemStack(Material.INK_SAC, config.getInt("blindnessItems")));
+        player.getInventory().addItem(new ItemStack(Material.FEATHER, getConfig().getInt("items.levitationItems")));
+        player.getInventory().addItem(new ItemStack(Material.ENDER_PEARL, getConfig().getInt("items.teleporterItems")));
+        player.getInventory().addItem(new ItemStack(Material.INK_SAC, getConfig().getInt("items.blindnessItems")));
     }
 
     public void waitingPlayerLeave(Player player) {
-        if (players.size() == config.getInt("minPlayers")) {
+        if (players.size() <= getConfig().getInt("game.minPlayers")) {
             cancelCountdown();
         }
         players.remove(player);
@@ -205,9 +185,9 @@ public class IceBoat extends JavaPlugin {
 
     public void startCountdown() {
         BukkitScheduler scheduler = Bukkit.getScheduler();
-        countDownLength = config.getInt("countDownLength");
-        countDown = countDownLength;
-        countDownTask = scheduler.runTaskTimer(instance, () -> {
+        countDown = getConfig().getInt("game.countDownLength");
+        countDownLength = countDown;
+        countDownTask = scheduler.runTaskTimer(this, () -> {
             countdownLoop();
         }, 20L, 20L);
     }
@@ -217,11 +197,25 @@ public class IceBoat extends JavaPlugin {
         progress.setProgress(1);
     }
 
+    public void setCountDownTime(int seconds, boolean useMax) {
+        if (useMax) {
+            countDown = Math.max(seconds, countDown);
+        } else {
+            countDown = Math.min(seconds, countDown);
+        }
+        countDown++;
+        countdownLoop();
+    }
+
     public void countdownLoop() {
-        countDown -= 1;
-        progress.setProgress(countDown/countDownLength);
+        countDown--;
+        progress.setProgress(((float)countDown)/countDownLength);
         if (countDown == 0) {
             countdownEnd();
+        } else if (countDown <= 3) {
+            for (Player player : players) {
+                player.sendTitlePart(TitlePart.TITLE, Component.text(countDown));
+            }
         }
     }
 
@@ -231,6 +225,8 @@ public class IceBoat extends JavaPlugin {
         for (Player player : world.getPlayers()) {
             if (!player.isInsideVehicle()) {
                 player.setGameMode(GameMode.SPECTATOR);
+            } else {
+                player.sendTitlePart(TitlePart.TITLE, Component.text("GO!"));
             }
         }
 
@@ -246,14 +242,14 @@ public class IceBoat extends JavaPlugin {
         createPlayerIndexes();
 
         BukkitScheduler scheduler = Bukkit.getScheduler();
-        pathDecay = scheduler.runTaskTimer(instance, () -> {pathDecay();}, 0L, 0L);
+        pathDecay = scheduler.runTaskTimer(this, () -> {pathDecay();}, 0L, 0L);
 
         progress.setTitle("GO!");
         progress.setProgress(0);
         generate();
         countDownTask.cancel();
 
-        int expand = ((int)config.getInt("firstPathRadius"))+2;
+        int expand = ((int)getConfig().getInt("generation.firstPathRadius"))+2;
         for (int x = -expand; x < expand; x++) {
             for (int y = -expand; y < expand; y++) {
                 world.getBlockAt(x, startHeight+1, y).setType(Material.AIR);
@@ -280,7 +276,7 @@ public class IceBoat extends JavaPlugin {
         if (pathDecay != null) pathDecay.cancel();
 
         BukkitScheduler scheduler = Bukkit.getScheduler();
-        scheduler.runTaskLater(instance, () -> {returnToLobby();}, 100L);
+        scheduler.runTaskLater(this, () -> {returnToLobby();}, 100L);
 
         if (playerIndexes != null && winner != null) {
             LevitationEffect levitation = levitationTimers[getPlayerIndex(winner)];
@@ -315,7 +311,7 @@ public class IceBoat extends JavaPlugin {
             path.clear(world);
         }
         progress.removeAll();
-        double height = config.getDouble("spawnHeight");
+        double height = getConfig().getDouble("world.spawnHeight");
         for (Player player : players) {
             if (player.isInsideVehicle()) {
                 player.getVehicle().remove();
@@ -323,14 +319,16 @@ public class IceBoat extends JavaPlugin {
         }
         for (Player player : world.getPlayers()) {
             player.setGameMode(GameMode.ADVENTURE);
-            player.teleport(new Location(world, 0, height, 0));
+            Location location = new Location(world, 0.5, height, 0.5, random.nextFloat(360), 0);
+            location.add(location.getDirection().multiply(0.1));
+            player.teleport(location);
             player.getInventory().clear();
         }
     }
 
     public void pathDecay() {
-        float decaySpeed = (float)config.getDouble("decaySpeed");
-        int decayDistance = config.getInt("decayDistance");
+        float decaySpeed = (float)getConfig().getDouble("game.decaySpeed");
+        int decayDistance = getConfig().getInt("game.decayDistance");
         for (Path path : paths) {
             int offset = path.height-height;
             if (offset >= decayDistance) {
@@ -340,8 +338,8 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public static int getPlayerIndex(Player player) {
-        return instance.getPlayerIndex(player.getUniqueId());
+    public int getPlayerIndex(Player player) {
+        return playerIndexes.indexOf(player.getUniqueId());
     }
 
     public void createPlayerIndexes() {
@@ -349,10 +347,6 @@ public class IceBoat extends JavaPlugin {
         for (Player player : players) {
             playerIndexes.add(player.getUniqueId());
         }
-    }
-
-    public int getPlayerIndex(UUID player) {
-        return playerIndexes.indexOf(player);
     }
 
     public int getCurrentHeight() {
@@ -377,7 +371,7 @@ public class IceBoat extends JavaPlugin {
     }
 
     public void generateStart() {
-        float radius = config.getInt("firstPathRadius");
+        float radius = getConfig().getInt("generation.firstPathRadius");
 
         int expand = (int)radius+2;
         int minBorder = (int)((radius-1.5f)*(radius-1.5f));
@@ -401,12 +395,12 @@ public class IceBoat extends JavaPlugin {
     }
 
     public void generate() {
-        float radiusStart = (float)config.getDouble("pathRadiusStart");
-        float radiusEnd = (float)config.getDouble("pathRadiusEnd");
-        float radiusShrink = (float)config.getDouble("radiusShrink");
-        float turnZoneStart = (float)config.getDouble("turnZoneStart");
-        float turnZoneEnd = (float)config.getDouble("turnZoneEnd");
-        float lengthScale = (float)config.getDouble("lengthScale");
+        float radiusStart = (float)getConfig().getDouble("generation.pathRadiusStart");
+        float radiusEnd = (float)getConfig().getDouble("generation.pathRadiusEnd");
+        float radiusShrink = (float)getConfig().getDouble("generation.radiusShrink");
+        float turnZoneStart = (float)getConfig().getDouble("generation.turnZoneStart");
+        float turnZoneEnd = (float)getConfig().getDouble("generation.turnZoneEnd");
+        float lengthScale = (float)getConfig().getDouble("generation.lengthScale");
 
         float t = (((float)(height-endHeight))/(startHeight-endHeight));
         float radius = FloatMath.lerpClamped(radiusEnd, radiusStart, FloatMath.clamp(FloatMath.lerp(t, t*t, radiusShrink), 0, 1));
@@ -498,8 +492,8 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public static void playSoundGloballyToPlayer(Player player, Sound sound, Location location, boolean playLocallyToOthers, float minPitch, float maxPitch) {
-        float pitch = instance.random.nextFloat(minPitch, maxPitch);
+    public void playSoundGloballyToPlayer(Player player, Sound sound, Location location, boolean playLocallyToOthers, float minPitch, float maxPitch) {
+        float pitch = random.nextFloat(minPitch, maxPitch);
         player.playSound(location, sound, 1000, pitch);
         if (!playLocallyToOthers) return;
         for (Player other : player.getWorld().getPlayers()) {
@@ -509,9 +503,9 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public static void playSoundLocallyToAll(Sound sound, Location location, float minPitch, float maxPitch) {
+    public void playSoundLocallyToAll(Sound sound, Location location, float minPitch, float maxPitch) {
         for (Player player : world.getPlayers()) {
-            player.playSound(location, sound, 5, instance.random.nextFloat(minPitch, maxPitch));
+            player.playSound(location, sound, 5, random.nextFloat(minPitch, maxPitch));
         }
     }
 }
