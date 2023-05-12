@@ -42,11 +42,11 @@ public class ItemListener implements Listener {
         
         if (player.isInsideVehicle()) {
             Entity vehicle = player.getVehicle();
-            BoatListener.temporaryAllowDismount = true;
+            plugin.temporaryAllowDismount = true;
             event.setCancelled(true);
             teleportInBoat((Boat)vehicle, player, event.getTo());
             teleportEffect(event.getTo(), player);
-            BoatListener.temporaryAllowDismount = false;
+            plugin.temporaryAllowDismount = false;
         }
     }
 
@@ -79,14 +79,14 @@ public class ItemListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
-            BoatListener.temporaryAllowDismount = true;
+            plugin.temporaryAllowDismount = true;
 
             int index = plugin.getPlayerIndex(player);
             Location location = plugin.lastSafeLocation[index];
 
             teleportInBoat((Boat)vehicle, player, location);
             teleportEffect(location, player);
-            BoatListener.temporaryAllowDismount = false;
+            plugin.temporaryAllowDismount = false;
 
         } else if (item == Material.INK_SAC) {
             new BlindnessEffect(plugin, player, 15L, plugin.getConfig().getLong("items.blindnessLingerDuration"), plugin.getConfig().getInt("items.blindnessEffectDuration"));

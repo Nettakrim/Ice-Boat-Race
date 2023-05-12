@@ -92,6 +92,8 @@ public class IceBoat extends JavaPlugin {
 
     private ArrayList<Boat> waitingBoats;
 
+    public boolean temporaryAllowDismount = false;
+
     public void teleportIntoGame(Player player) {
         if (gameState != GameState.WAITING) {
             startRound();

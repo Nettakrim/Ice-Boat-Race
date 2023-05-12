@@ -50,7 +50,7 @@ public class ConnectionListener implements Listener {
     private void removeFromGame(Player player) {
         plugin.progress.removePlayer(player);
         if (!plugin.players.contains(player)) return;
-        BoatListener.temporaryAllowDismount = true;
+        plugin.temporaryAllowDismount = true;
 
         if (plugin.gameState == GameState.PLAYING) {
             plugin.killPlayer(player);
@@ -58,16 +58,16 @@ public class ConnectionListener implements Listener {
             plugin.waitingPlayerLeave(player);
             if (player.isInsideVehicle()) player.getVehicle().remove();
         }
-        BoatListener.temporaryAllowDismount = false;
+        plugin.temporaryAllowDismount = false;
     }
 
     private void joinGame(Player player) {
-        BoatListener.temporaryAllowDismount = true;
+        plugin.temporaryAllowDismount = true;
         if (plugin.gameState == GameState.PLAYING) {
             plugin.progress.addPlayer(player);
         }
         player.setGameMode(GameMode.ADVENTURE);
         player.teleport(new Location(player.getWorld(), 0.5, plugin.getConfig().getDouble("world.spawnHeight"), 0.5));
-        BoatListener.temporaryAllowDismount = false;
+        plugin.temporaryAllowDismount = false;
     }
 }

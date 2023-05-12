@@ -20,8 +20,6 @@ import com.nettakrim.ice_boat.items.LevitationEffect;
 
 public class BoatListener implements Listener {
 
-    public static boolean temporaryAllowDismount = false;
-
     private final IceBoat plugin;
 
     public BoatListener(IceBoat plugin) {
@@ -53,7 +51,7 @@ public class BoatListener implements Listener {
             plugin.waitingPlayerLeave(player);
         }
 
-        if (!temporaryAllowDismount) {
+        if (!plugin.temporaryAllowDismount) {
             if (plugin.gameState == GameState.ENDING) {
                 event.setCancelled(true);
             }
