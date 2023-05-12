@@ -61,6 +61,7 @@ public class LevitationEffect {
             Vector v = vehicle.getVelocity();
             v.setY(0);
             vehicle.setVelocity(v);
+            driftCorrection -= 0.1;
         }
         duration--;
         if (duration <= 0) {
