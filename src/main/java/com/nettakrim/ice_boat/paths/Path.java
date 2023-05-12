@@ -47,18 +47,34 @@ public abstract class Path {
         for (int x = approximation.minX-expand; x < approximation.maxX+expand; x++) {
             for (int y = approximation.minY-expand; y < approximation.maxY+expand; y++) {
                 boolean cutoff = ((exitX-x)*angleX)+((exitY-y)*angleY) < 0 && Math.max(Math.abs(exitX-x), Math.abs(exitY-y)) < expand+1;
-                if (cutoff && !isFinishLine) continue;
+                if (cutoff) continue;
                 float distance = getDistanceField(new Vector2f(x, y));
                 if (distance < radius) {
                     Material material = Material.PACKED_ICE;
-                    if (isFinishLine && cutoff) {
-                        material = Material.LIME_WOOL;
-                    } else if (distance < radius*blueIceSize) {
+                    if (distance < radius*blueIceSize) {
                         material = Material.BLUE_ICE;
                     }
 
                     world.getBlockAt(x, height, y).setType(material);
                     blocks++;
+                }
+            }
+        }
+
+        if (isFinishLine) {
+            int winCircleBounds = ((int)(radius+0.5f))+1;
+            float winCircle = (radius+0.5f)*(radius+0.5f);
+            int offsetX = Math.round(exit.point.x + exit.angle.x);
+            int offsetY = Math.round(exit.point.y + exit.angle.y);
+            for (int x = -winCircleBounds; x < winCircleBounds; x++) {
+                for (int y = -winCircleBounds; y < winCircleBounds; y++) {
+                    int dist = x*x + y*y;
+                    if (dist < winCircle) {
+                        Block block = world.getBlockAt(x+offsetX, height, y+offsetY);
+                        if (block.getType() == Material.AIR) {
+                            block.setType(Material.LIME_WOOL);
+                        }
+                    }
                 }
             }
         }
