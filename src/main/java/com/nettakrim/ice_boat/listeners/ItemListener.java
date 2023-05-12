@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.nettakrim.ice_boat.IceBoat;
+import com.nettakrim.ice_boat.PlayerData;
 import com.nettakrim.ice_boat.IceBoat.GameState;
 import com.nettakrim.ice_boat.items.BlindnessEffect;
 import com.nettakrim.ice_boat.items.LevitationEffect;
@@ -67,13 +68,10 @@ public class ItemListener implements Listener {
         Entity vehicle = player.getVehicle();
 
         if(item == Material.FEATHER){
-            int index = plugin.getPlayerIndex(player);
-            LevitationEffect previous = plugin.levitationTimers[index];
-            if (previous != null && !previous.isCancelled()) {
-                previous.cancel();
-            }
+            PlayerData playerData = plugin.playerDatas.get(player.getUniqueId());
+            playerData.cancelLevitation(false);
             LevitationEffect levitation = new LevitationEffect(plugin, vehicle, player, plugin.getConfig().getLong("items.levitationDuration"));
-            plugin.levitationTimers[index] = levitation;
+            playerData.levitationEffect = levitation;
             levitation.runTaskTimer(plugin, 0L, 0L);
 
         } else if (item == Material.ENDER_PEARL) {
@@ -83,8 +81,8 @@ public class ItemListener implements Listener {
             }
             plugin.temporaryAllowDismount = true;
 
-            int index = plugin.getPlayerIndex(player);
-            Location location = plugin.lastSafeLocation[index];
+            PlayerData playerData = plugin.playerDatas.get(player.getUniqueId());
+            Location location = playerData.lastSafeLocation;
 
             teleportInBoat((Boat)vehicle, player, location);
             teleportEffect(location, player);

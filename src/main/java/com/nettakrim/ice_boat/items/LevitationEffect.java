@@ -31,7 +31,7 @@ public class LevitationEffect extends BukkitRunnable {
         start(duration);
     }
 
-    public void start(long duration) {
+    private void start(long duration) {
         this.duration = duration;
 
         if (!vehicle.isOnGround()) {

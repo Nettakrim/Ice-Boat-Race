@@ -1,5 +1,6 @@
 package com.nettakrim.ice_boat.paths;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import org.bukkit.Material;
@@ -136,6 +137,31 @@ public abstract class Path {
         } else if (material2 == Material.ICE && material != Material.PACKED_ICE) {
             melt(block, material2, 2);
         }
+    }
+
+    public boolean passGenerationChecks(ArrayList<Path> paths, float turnZoneStart, float turnZoneSize, float distanceThreshold) {
+        return passTurnCheck(turnZoneStart, turnZoneSize) && passDistanceCheck(paths, distanceThreshold);
+    }
+
+    private boolean passTurnCheck(float turnZoneStart, float turnZoneSize) {
+        Vector2f v = new Vector2f(entrance.point).normalize();
+        float angle = v.dot(new Vector2f(new Vector2f(exit.point).sub(new Vector2f(entrance.point))).normalize());
+        float length = exit.point.length();
+
+        return angle < FloatMath.clamp(1-(length-turnZoneStart)/turnZoneSize, -0.5f, 1);
+    }
+
+    private boolean passDistanceCheck(ArrayList<Path> paths, float distanceThreshold) {
+        int size = paths.size();
+        if (size >= 1) {
+            float minimumDistance = approximation.minimumDistance(paths.get(size-1).approximation);
+            if (minimumDistance < distanceThreshold) return false;
+            if (size >= 2) {
+                minimumDistance = approximation.minimumDistance(paths.get(size-2).approximation);
+                if (minimumDistance < distanceThreshold) return false;
+            }
+        }
+        return true;
     }
 
     public class Approximation {

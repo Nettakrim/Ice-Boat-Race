@@ -1,6 +1,7 @@
 package com.nettakrim.ice_boat;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.UUID;
 
@@ -25,7 +26,6 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.joml.Vector2f;
 
-import com.nettakrim.ice_boat.items.LevitationEffect;
 import com.nettakrim.ice_boat.listeners.BoatListener;
 import com.nettakrim.ice_boat.listeners.ConnectionListener;
 import com.nettakrim.ice_boat.listeners.ItemListener;
@@ -71,6 +71,7 @@ public class IceBoat extends JavaPlugin {
     private int height;
     private int startHeight;
     private int endHeight;
+    private int deathDistance;
     private ArrayList<Path> paths;
 
     private End defaultEnd = new End(new Vector2f(0,0), new Vector2f(1,0));
@@ -79,10 +80,8 @@ public class IceBoat extends JavaPlugin {
         (End end, float lengthScale) -> BezierPath.buildRandom(random, end, lengthScale)
     };
 
-    public LevitationEffect[] levitationTimers;
-    public Location[] lastSafeLocation;
-    public ArrayList<UUID> playerIndexes;
-    public BukkitTask pathDecay;
+    public HashMap<UUID, PlayerData> playerDatas;
+    private BukkitTask pathDecay;
 
     private BukkitTask countDownTask;
     private int countDown;
@@ -90,9 +89,8 @@ public class IceBoat extends JavaPlugin {
     public BossBar progress;
 
     private boolean gameNearlyOver;
-    private int deathDistance;
 
-    public BukkitTask winParticles;
+    private BukkitTask winParticles;
 
     private ArrayList<Boat> waitingBoats;
 
@@ -133,7 +131,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void startRound() {
+    private void startRound() {
         gameState = GameState.WAITING;
 
         if (waitingBoats != null) {
@@ -189,7 +187,7 @@ public class IceBoat extends JavaPlugin {
         player.getInventory().clear();
     }
 
-    public void startCountdown() {
+    private void startCountdown() {
         BukkitScheduler scheduler = Bukkit.getScheduler();
         countDown = getConfig().getInt("game.countDownLength");
         countDownLength = countDown;
@@ -198,12 +196,12 @@ public class IceBoat extends JavaPlugin {
         }, 20L, 20L);
     }
 
-    public void cancelCountdown() {
+    private void cancelCountdown() {
         countDownTask.cancel();
         progress.setProgress(1);
     }
 
-    public void setCountDownTime(int seconds, boolean useMax) {
+    private void setCountDownTime(int seconds, boolean useMax) {
         if (useMax) {
             countDown = Math.max(seconds, countDown);
         } else {
@@ -213,7 +211,7 @@ public class IceBoat extends JavaPlugin {
         countdownLoop();
     }
 
-    public void countdownLoop() {
+    private void countdownLoop() {
         countDown--;
         progress.setProgress(((float)countDown)/countDownLength);
         if (countDown == 0) {
@@ -225,7 +223,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void countdownEnd() {
+    private void countdownEnd() {
         gameState = GameState.PLAYING;
 
         for (Player player : world.getPlayers()) {
@@ -243,12 +241,15 @@ public class IceBoat extends JavaPlugin {
         }
 
         int playerCount = players.size();
-        levitationTimers = new LevitationEffect[playerCount];
-        lastSafeLocation = new Location[playerCount];
-        createPlayerIndexes();
+        playerDatas = new HashMap<UUID, PlayerData>(playerCount);
+        for (Player player : players) {
+            playerDatas.put(player.getUniqueId(), new PlayerData(player));
+        }
 
         BukkitScheduler scheduler = Bukkit.getScheduler();
-        pathDecay = scheduler.runTaskTimer(this, () -> {pathDecay();}, 0L, 0L);
+        float decaySpeed = (float)getConfig().getDouble("game.decaySpeed");
+        int decayDistance = getConfig().getInt("game.decayDistance");
+        pathDecay = scheduler.runTaskTimer(this, () -> {pathDecay(decaySpeed, decayDistance);}, 0L, 0L);
 
         progress.setTitle("GO!");
         progress.setProgress(0);
@@ -284,11 +285,8 @@ public class IceBoat extends JavaPlugin {
         BukkitScheduler scheduler = Bukkit.getScheduler();
         scheduler.runTaskLater(this, () -> {returnToLobby();}, 100L);
 
-        if (playerIndexes != null && winner != null) {
-            LevitationEffect levitation = levitationTimers[getPlayerIndex(winner)];
-            if (levitation != null && !levitation.isCancelled()) {
-                levitation.cancelSilently();
-            }
+        if (winner != null) {
+            playerDatas.get(winner.getUniqueId()).cancelLevitation(true);
         }
 
         if (winner != null) {
@@ -311,7 +309,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void returnToLobby() {
+    private void returnToLobby() {
         gameState = GameState.LOBBY;
         for (Path path : paths) {
             path.clear(world);
@@ -332,9 +330,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void pathDecay() {
-        float decaySpeed = (float)getConfig().getDouble("game.decaySpeed");
-        int decayDistance = getConfig().getInt("game.decayDistance");
+    private void pathDecay(float decaySpeed, int decayDistance) {
         for (Path path : paths) {
             int offset = path.height-height;
             if (offset >= decayDistance) {
@@ -342,25 +338,6 @@ public class IceBoat extends JavaPlugin {
                 path.decay(random, world, speed, offset-decayDistance);
             }
         }
-    }
-
-    public int getPlayerIndex(Player player) {
-        return playerIndexes.indexOf(player.getUniqueId());
-    }
-
-    public void createPlayerIndexes() {
-        playerIndexes = new ArrayList<UUID>();
-        for (Player player : players) {
-            playerIndexes.add(player.getUniqueId());
-        }
-    }
-
-    public int getCurrentHeight() {
-        return height;
-    }
-
-    public Path.RandomPathBuilder getPathBuilder() {
-        return pathBuilders[random.nextInt(pathBuilders.length)];
     }
 
     public void generateIfLowEnough(int testHeight, Player player) {
@@ -376,7 +353,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void generateStart() {
+    private void generateStart() {
         float radius = getConfig().getInt("generation.firstPathRadius");
 
         int expand = (int)radius+2;
@@ -400,7 +377,7 @@ public class IceBoat extends JavaPlugin {
         height--;
     }
 
-    public void generate() {
+    private void generate() {
         float radiusStart = (float)getConfig().getDouble("generation.pathRadiusStart");
         float radiusEnd = (float)getConfig().getDouble("generation.pathRadiusEnd");
         float radiusShrink = (float)getConfig().getDouble("generation.radiusShrink");
@@ -428,6 +405,10 @@ public class IceBoat extends JavaPlugin {
         height--;
     }
 
+    private Path.RandomPathBuilder getPathBuilder() {
+        return pathBuilders[random.nextInt(pathBuilders.length)];
+    }
+
     private Path getRandomValidPath(float radius, float turnZoneStart, float turnZoneSize, int maxAttempts, float lengthScale) {
         int attempts = 0;
         Path path = null;
@@ -441,7 +422,7 @@ public class IceBoat extends JavaPlugin {
 
         while(attempts < maxAttempts) {
             path = getPathBuilder().buildRandom(lastEnd, lengthScale);
-            if (passTurnCheck(path, turnZoneStart, turnZoneSize) && passDistanceCheck(path, turnZoneStart, turnZoneSize, radius*(1.25f-((float)attempts)/maxAttempts)*2)) {
+            if (path.passGenerationChecks(paths, turnZoneStart, turnZoneSize, radius*(1.25f-((float)attempts)/maxAttempts)*2)) {
                 return path;
             } else {
                 attempts++;
@@ -451,27 +432,6 @@ public class IceBoat extends JavaPlugin {
             }
         }
         return path;
-    }
-
-    private boolean passDistanceCheck(Path path, float turnZoneStart, float turnZoneSize, float distanceThreshold) {
-        int size = paths.size();
-        if (size >= 1) {
-            float minimumDistance = path.approximation.minimumDistance(paths.get(size-1).approximation);
-            if (minimumDistance < distanceThreshold) return false;
-            if (size >= 2) {
-                minimumDistance = path.approximation.minimumDistance(paths.get(size-2).approximation);
-                if (minimumDistance < distanceThreshold) return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean passTurnCheck(Path path, float safeZone, float turnWidth) {
-        Vector2f v = new Vector2f(path.entrance.point).normalize();
-        float angle = v.dot(new Vector2f(new Vector2f(path.exit.point).sub(new Vector2f(path.entrance.point))).normalize());
-        float length = path.exit.point.length();
-
-        return angle < FloatMath.clamp(1-(length-safeZone)/turnWidth, -0.5f, 1);
     }
 
     public void killIfLowEnough(double testHeight, Player player) {

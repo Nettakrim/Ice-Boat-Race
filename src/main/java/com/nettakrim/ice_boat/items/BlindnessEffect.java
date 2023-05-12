@@ -35,7 +35,7 @@ public class BlindnessEffect extends BukkitRunnable {
         start(duration, effectDuration);
     }
 
-    public void start(long duration, int effectDuration) {
+    private void start(long duration, int effectDuration) {
         this.duration = duration;
         this.effectDuration = effectDuration;
 

@@ -16,7 +16,6 @@ import org.spigotmc.event.entity.EntityMountEvent;
 
 import com.nettakrim.ice_boat.IceBoat;
 import com.nettakrim.ice_boat.IceBoat.GameState;
-import com.nettakrim.ice_boat.items.LevitationEffect;
 
 public class BoatListener implements Listener {
 
@@ -59,11 +58,7 @@ public class BoatListener implements Listener {
             if (plugin.gameState != GameState.PLAYING) return;
 
             event.setCancelled(true);
-            int index = plugin.getPlayerIndex(player);
-            LevitationEffect levitation = plugin.levitationTimers[index];
-            if (levitation != null && !levitation.isCancelled()) {
-                levitation.cancel();
-            }
+            plugin.playerDatas.get(player.getUniqueId()).cancelLevitation(false);
         }
     }
 
@@ -92,7 +87,7 @@ public class BoatListener implements Listener {
             if (block.isSolid()) {
                 plugin.generateIfLowEnough(block.getY(), player);
                 if (material == Material.BLUE_ICE) {
-                    plugin.lastSafeLocation[plugin.getPlayerIndex(player)] = player.getVehicle().getLocation();
+                    plugin.playerDatas.get(player.getUniqueId()).lastSafeLocation = player.getVehicle().getLocation();
                 } else if (material == Material.LIME_WOOL) {
                     plugin.endRound(player, true);
                 }
