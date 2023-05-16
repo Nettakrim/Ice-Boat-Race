@@ -21,9 +21,12 @@ public class BoatListener implements Listener {
 
     private final IceBoat plugin;
 
+    private final int startHeight;
+
     public BoatListener(IceBoat plugin) {
         this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        startHeight = plugin.getConfig().getInt("game.startHeight")+5;
     }
 
     @EventHandler
@@ -75,7 +78,7 @@ public class BoatListener implements Listener {
                 plugin.teleportIntoGame(player);
             } else {
                 player.setGameMode(GameMode.SPECTATOR);
-                player.teleport(new Location(player.getWorld(), 0, plugin.getConfig().getInt("game.startHeight")+5, 0));
+                player.teleport(new Location(player.getWorld(), 0, startHeight, 0));
             }
         }
 
@@ -92,6 +95,8 @@ public class BoatListener implements Listener {
             } else {
                 plugin.killIfLowEnough(location.getY(), player);
             }
+        } else if (!plugin.temporaryAllowDismount && player.getLocation().getY() < startHeight) {
+            player.setGameMode(GameMode.SPECTATOR);
         }
     }
 

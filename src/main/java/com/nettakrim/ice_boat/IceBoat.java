@@ -17,6 +17,7 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Boat;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -194,12 +195,15 @@ public class IceBoat extends JavaPlugin {
             }
             setCountDownTime(3, false);
         }
+
         player.getInventory().clear();
-        player.getInventory().addItem(new ItemStack(Material.FEATHER, getConfig().getInt("items.levitationItems")));
-        player.getInventory().addItem(new ItemStack(Material.ENDER_PEARL, getConfig().getInt("items.teleporterItems")));
-        player.getInventory().addItem(new ItemStack(Material.INK_SAC, getConfig().getInt("items.blindnessItems")));
-        player.getInventory().addItem(new ItemStack(Material.BLAZE_POWDER, getConfig().getInt("items.melterItems")));
-        player.getInventory().addItem(new ItemStack(Material.SNOWBALL, getConfig().getInt("items.snowItems")));
+        if (player.getVehicle().getPassengers().size() == 0) {
+            player.getInventory().addItem(new ItemStack(Material.FEATHER, getConfig().getInt("items.levitationItems")));
+            player.getInventory().addItem(new ItemStack(Material.ENDER_PEARL, getConfig().getInt("items.teleporterItems")));
+            player.getInventory().addItem(new ItemStack(Material.INK_SAC, getConfig().getInt("items.blindnessItems")));
+            player.getInventory().addItem(new ItemStack(Material.BLAZE_POWDER, getConfig().getInt("items.melterItems")));
+            player.getInventory().addItem(new ItemStack(Material.SNOWBALL, getConfig().getInt("items.snowItems")));
+        }
     }
 
     public void waitingPlayerLeave(Player player) {
@@ -493,9 +497,28 @@ public class IceBoat extends JavaPlugin {
     }
 
     public void killPlayer(Player player) {
-        if (player.isInsideVehicle()) player.getVehicle().remove();
+        if (player.isInsideVehicle()) {
+            Entity vehicle = player.getVehicle();
+            //save the second passenger
+            if (vehicle.getPassengers().size() > 1) {
+                Entity other = vehicle.getPassengers().get(1);
+                Location location = playerDatas.get(player.getUniqueId()).lastSafeLocation;
+                other.teleport(location);
+                Boat newVehicle = (Boat)(vehicle.getWorld().spawnEntity(location, EntityType.BOAT));
+                if (other instanceof Player otherPlayer) {
+                    for (ItemStack itemStack : otherPlayer.getInventory().getContents()) {
+                        otherPlayer.getInventory().addItem(itemStack);
+                    }
+                    teleportEffect(location, otherPlayer);
+                }
+                newVehicle.setBoatType(((Boat)vehicle).getBoatType());
+                newVehicle.addPassenger(other);
+            }
+            vehicle.remove();
+        }
         player.setGameMode(GameMode.SPECTATOR);
         players.remove(player);
+        player.getInventory().clear();
         world.spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 50, 0, 0, 0, 0.5, null, true);
         world.spawnParticle(Particle.EXPLOSION_LARGE, player.getLocation(), 10, 1, 1, 1, 1, null, true);
         playSoundLocallyToAll(Sound.ENTITY_GENERIC_EXPLODE, player.getLocation(), 0.9f, 1.1f);
@@ -525,5 +548,11 @@ public class IceBoat extends JavaPlugin {
         for (Player player : world.getPlayers()) {
             player.playSound(location, sound, 5, random.nextFloat(minPitch, maxPitch));
         }
+    }
+
+    public void teleportEffect(Location location, Player player) {
+        Location up = location.clone().add(0,0.5,0);
+        playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true, 0.85f, 1.15f);
+        player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, up, 50);
     }
 }

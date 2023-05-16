@@ -23,6 +23,8 @@ import com.nettakrim.ice_boat.IceBoat.GameState;
 import com.nettakrim.ice_boat.items.BlindnessEffect;
 import com.nettakrim.ice_boat.items.LevitationEffect;
 
+import java.util.List;
+
 public class ItemListener implements Listener {
     
     private final IceBoat plugin;
@@ -45,8 +47,8 @@ public class ItemListener implements Listener {
             Entity vehicle = player.getVehicle();
             plugin.temporaryAllowDismount = true;
             event.setCancelled(true);
-            teleportInBoat((Boat)vehicle, player, event.getTo());
-            teleportEffect(event.getTo(), player);
+            teleportBoatWithPassengers((Boat)vehicle, event.getTo());
+            plugin.teleportEffect(event.getTo(), player);
             plugin.temporaryAllowDismount = false;
         }
     }
@@ -84,8 +86,8 @@ public class ItemListener implements Listener {
             PlayerData playerData = plugin.playerDatas.get(player.getUniqueId());
             Location location = playerData.lastSafeLocation;
 
-            teleportInBoat((Boat)vehicle, player, location);
-            teleportEffect(location, player);
+            teleportBoatWithPassengers((Boat)vehicle, location);
+            plugin.teleportEffect(location, player);
             plugin.temporaryAllowDismount = false;
 
         } else if (item == Material.INK_SAC) {
@@ -145,18 +147,15 @@ public class ItemListener implements Listener {
         }
     }
 
-    public void teleportInBoat(Boat old, Player player, Location location) {
+    public void teleportBoatWithPassengers(Boat boat, Location location) {
         //spawning a new boat is probably not ideal, but i couldnt figure out how to not
-        Boat newVehicle = (Boat)(player.getWorld().spawnEntity(location, EntityType.BOAT));
-        newVehicle.setBoatType(old.getBoatType());
-        old.remove();
-        player.teleport(location);
-        newVehicle.addPassenger(player);
-    }
-
-    public void teleportEffect(Location location, Player player) {
-        Location up = location.clone().add(0,0.5,0);
-        plugin.playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true, 0.85f, 1.15f);
-        player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, up, 50);
+        Boat newVehicle = (Boat)(boat.getWorld().spawnEntity(location, EntityType.BOAT));
+        newVehicle.setBoatType(boat.getBoatType());
+        List<Entity> oldPassengers = boat.getPassengers();
+        boat.remove();
+        for (Entity entity : oldPassengers) {
+            entity.teleport(location);
+            newVehicle.addPassenger(entity);
+        }
     }
 }
