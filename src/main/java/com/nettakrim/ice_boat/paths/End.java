@@ -9,6 +9,6 @@ public class End {
         this.angle = angle;
     }
 
-    public Vector2f point;
-    public Vector2f angle;
+    public final Vector2f point;
+    public final Vector2f angle;
 }

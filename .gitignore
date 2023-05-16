@@ -1,3 +1,5 @@
 testing_server/
 target/
 .vscode/
+.idea/
+IceBoat.iml

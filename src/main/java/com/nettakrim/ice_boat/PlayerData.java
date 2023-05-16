@@ -10,7 +10,7 @@ public class PlayerData {
         this.player = player;
     }
 
-    public Player player;
+    public final Player player;
     public LevitationEffect levitationEffect;
     public Location lastSafeLocation;
 

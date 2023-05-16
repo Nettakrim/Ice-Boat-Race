@@ -34,6 +34,8 @@ public abstract class Path {
 
     protected abstract Approximation createApproximation();
 
+    public abstract Vector2f getPosition(float percentage);
+
     public void generate(World world, float radius, int height, float blueIceSize, boolean isFinishLine) {
         this.expand = ((int)radius)+1;
         this.height = height;
@@ -175,13 +177,13 @@ public abstract class Path {
             if (minimumDistance < distanceThreshold) return false;
             if (size >= 2) {
                 minimumDistance = approximation.minimumDistance(paths.get(size-2).approximation);
-                if (minimumDistance < distanceThreshold) return false;
+                return minimumDistance >= distanceThreshold;
             }
         }
         return true;
     }
 
-    public class Approximation {
+    public static class Approximation {
         public final int minX;
         public final int minY;
         public final int maxX;
@@ -209,7 +211,7 @@ public abstract class Path {
           
             float dot = A * C + B * D;
             float len_sq = C * C + D * D;
-            float param = -1;
+            float param;
             param = FloatMath.clamp(dot / len_sq, 0f, 1f);
           
             float xx = FloatMath.lerp(a.x, b.x, param);

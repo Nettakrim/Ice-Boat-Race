@@ -57,7 +57,7 @@ public class BezierPath extends Path {
         float ky = kk * (2.0f*FloatMath.dot(a,a)+FloatMath.dot(d,b))/3.0f;
         float kz = kk * FloatMath.dot(d,a);      
     
-        float res = 0.0f;
+        float res;
     
         float p  = ky - kx*kx;
         float q  = kx*(2.0f*kx*kx - 3.0f*ky) + kz;
@@ -78,9 +78,9 @@ public class BezierPath extends Path {
             res = FloatMath.dot(q3,q3);
         } else {   
             float z = FloatMath.sqrt(-p);
-            float v = ((float)Math.acos((double)(q/(p*z*2.0f))))/3.0f;
-            float m = (float)Math.cos((double)v);
-            float n = (float)(Math.sin((double)v)*1.732050808);
+            float v = ((float)Math.acos(q/(p*z*2.0f)))/3.0f;
+            float m = (float)Math.cos(v);
+            float n = (float)(Math.sin(v)*1.732050808);
             Vector3f t = FloatMath.clamp(new Vector3f(m+m,-n-m,n-m).mul(z).sub(kx, kx, kx), 0.0f, 1.0f );
 
             Vector2f qx = new Vector2f(d).add((new Vector2f(c).add(new Vector2f(b).mul(t.x))).mul(t.x));
@@ -89,11 +89,7 @@ public class BezierPath extends Path {
             Vector2f qy = new Vector2f(d).add((new Vector2f(c).add(new Vector2f(b).mul(t.y))).mul(t.y));
             float dy = FloatMath.dot(qy, qy);
 
-            if(dx<dy) { 
-                res=dx;
-            } else {
-                res=dy;
-            }
+            res = Math.min(dx, dy);
         }
         
         return FloatMath.sqrt(res);
@@ -107,5 +103,10 @@ public class BezierPath extends Path {
         int maxX = (int)Math.max(Math.max(entrance.point.x, exit.point.x), controlPoint.x);
         int maxY = (int)Math.max(Math.max(entrance.point.y, exit.point.y), controlPoint.y);
         return new Approximation(minX, minY, maxX, maxY, new Vector2f[]{entrance.point, apexApprox, exit.point});
+    }
+
+    @Override
+    public Vector2f getPosition(float percentage) {
+        return FloatMath.lerp(FloatMath.lerp(entrance.point, controlPoint, percentage), FloatMath.lerp(controlPoint, exit.point, percentage), percentage);
     }
 }

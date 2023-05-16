@@ -19,6 +19,7 @@ public class LevitationEffect extends BukkitRunnable {
     private final Player player;
     private final World world;
 
+    private float startDuration;
     private long duration;
     private double driftCorrection;
 
@@ -32,6 +33,7 @@ public class LevitationEffect extends BukkitRunnable {
     }
 
     private void start(long duration) {
+        this.startDuration = duration;
         this.duration = duration;
 
         if (!vehicle.isOnGround()) {
@@ -58,6 +60,8 @@ public class LevitationEffect extends BukkitRunnable {
             driftCorrection -= 0.1;
         }
         duration--;
+        player.setExp(((float)duration)/startDuration);
+        player.setLevel((int)(duration/20)+1);
         if (duration <= 0) {
             cancel();
         }
@@ -66,13 +70,17 @@ public class LevitationEffect extends BukkitRunnable {
     @Override
     public void cancel() {
         super.cancel();
+        player.setExp(0);
+        player.setLevel(0);
+        vehicle.setGravity(true);
         world.spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1, null);
         plugin.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation(), true, 0.95f, 1.05f);
-        vehicle.setGravity(true);
     }
 
     public void cancelSilently() {
         super.cancel();
+        player.setExp(0);
+        player.setLevel(0);
         vehicle.setGravity(true);
     }
 }

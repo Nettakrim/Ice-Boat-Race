@@ -21,6 +21,10 @@ items:
   levitationItems: 4
   levitationDuration: 100
   teleporterItems: 5
-  blindnessItems: 2
+  blindnessItems: 0
   blindnessLingerDuration: 300
   blindnessEffectDuration: 40
+  melterItems: 0
+  snowItems: 0
+
+  boxDelay: 45

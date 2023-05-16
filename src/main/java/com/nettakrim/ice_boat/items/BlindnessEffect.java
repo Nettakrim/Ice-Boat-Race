@@ -21,8 +21,8 @@ public class BlindnessEffect extends BukkitRunnable {
 
     private long duration;
 
-    private double rangeX = 3.5;
-    private double rangeY = 1;
+    private final double rangeX = 3.5;
+    private final double rangeY = 1;
     private int effectDuration;
 
     public BlindnessEffect(IceBoat plugin, Player player, long duration, int effectDuration) {

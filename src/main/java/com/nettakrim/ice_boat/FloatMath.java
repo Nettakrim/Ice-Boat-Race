@@ -21,7 +21,7 @@ public class FloatMath {
     }
 
     public static float sqrt(float x) {
-        return (float)Math.sqrt((double)x);
+        return (float)Math.sqrt(x);
     }
 
     public static float dot(Vector2f a, Vector2f b) {
