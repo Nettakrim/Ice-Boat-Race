@@ -94,6 +94,8 @@ public class IceBoat extends JavaPlugin {
     private BukkitTask winParticles;
 
     private ArrayList<ItemBox> itemBoxes;
+    private ArrayList<Material> itemPool;
+    private int timeSinceBoxSpawn;
 
     private ArrayList<Boat> waitingBoats;
 
@@ -110,8 +112,8 @@ public class IceBoat extends JavaPlugin {
         if (boats < world.getPlayerCount()) {
             int types = Boat.Type.values().length;
             int b = boats%9;
-            float position = ((b+1)/2) * ((b%2)-0.5f) * 5;
-            location = new Location(world, (-2.5f*(boats/9))+2.5f, height+2, position+0.5f, -90, 0);
+            float position = (float)((b+1)/2) * ((b%2)-0.5f) * 5;
+            location = new Location(world, (-2.5f*(float)(boats/9))+2.5f, height+2, position+0.5f, -90, 0);
             Boat boat = (Boat)world.spawnEntity(location, EntityType.BOAT);
             boat.setBoatType(Boat.Type.values()[random.nextInt(types)]);
             waitingBoats.add(boat);
@@ -163,6 +165,21 @@ public class IceBoat extends JavaPlugin {
         } else {
             progress.setTitle("Sit in a Boat!");
             progress.setProgress(1);
+        }
+
+        itemPool = new ArrayList<>();
+        addItemsToPool(Material.FEATHER, "levitation");
+        addItemsToPool(Material.ENDER_PEARL, "teleporter");
+        addItemsToPool(Material.INK_SAC, "blindness");
+        addItemsToPool(Material.BLAZE_POWDER, "melter");
+        addItemsToPool(Material.SNOWBALL, "snow");
+    }
+
+    private void addItemsToPool(Material material, String key) {
+        int amount = getConfig().getInt("items."+key+"BoxWeight");
+        if (amount == 0) return;
+        for (int x = 0; x < amount; x++) {
+            itemPool.add(material);
         }
     }
 
@@ -343,11 +360,20 @@ public class IceBoat extends JavaPlugin {
         return  height;
     }
 
+    public Path getPath(int height) {
+        for (Path path : paths) {
+            if (path.height == height) {
+                return path;
+            }
+        }
+        return null;
+    }
+
     private void pathDecay(float decaySpeed, int decayDistance) {
         for (Path path : paths) {
             int offset = path.height-height;
             if (offset >= decayDistance) {
-                float speed = decaySpeed*(offset/decayDistance);
+                float speed = decaySpeed*(float)(offset/decayDistance);
                 path.decay(random, world, speed, offset-decayDistance);
             }
         }
@@ -371,6 +397,11 @@ public class IceBoat extends JavaPlugin {
     private void generateStart() {
         float radius = getConfig().getInt("generation.firstPathRadius");
 
+        BezierPath path = BezierPath.build(defaultEnd, 40f, new Vector2f(50f, (random.nextFloat()-0.5f)*20f));
+
+        path.generate(world, radius, height, 0.75f, false);
+        paths.add(path);
+
         int expand = (int)radius+2;
         int minBorder = (int)((radius-1.5f)*(radius-1.5f));
         int maxBorder = (int)(radius*radius);
@@ -383,11 +414,6 @@ public class IceBoat extends JavaPlugin {
                 }
             }
         }
-
-        BezierPath path = BezierPath.build(defaultEnd, 40f, new Vector2f(50f, (random.nextFloat()-0.5f)*20f));
-
-        path.generate(world, radius, height, 0.75f, false);
-        paths.add(path);
 
         height--;
     }
@@ -415,12 +441,17 @@ public class IceBoat extends JavaPlugin {
             winParticles = Bukkit.getScheduler().runTaskTimer(this, () -> world.spawnParticle(Particle.TOTEM, location, 3, 2, 0.25, 2, 0.1, null, true), 0L, 0L);
         }
 
-        if (true) {
+        if (height > endHeight+2) {
             Vector2f pos = path.getPosition(random.nextFloat(0.3f, 0.7f));
-            Location location = new Location(world, pos.x, height+0.5, pos.y);
-            ItemBox itemBox = new ItemBox(this, Material.INK_SAC, location, getConfig().getInt("items.boxDelay"));
-            itemBoxes.add(itemBox);
-            itemBox.runTaskTimer(this, 0L, 0L);
+            if ((1-(random.nextFloat()*random.nextFloat()))/((timeSinceBoxSpawn+1)/2f) < (pos.length()/turnZoneEnd)*getConfig().getDouble("items.boxSpawnRate")) {
+                Location location = new Location(world, pos.x, height + 0.5, pos.y);
+                ItemBox itemBox = new ItemBox(this, itemPool.get(random.nextInt(itemPool.size())), location, getConfig().getInt("items.boxDelay"), getConfig().getDouble("items.boxHeight"));
+                itemBoxes.add(itemBox);
+                itemBox.runTaskTimer(this, 0L, 0L);
+                timeSinceBoxSpawn = 0;
+            } else {
+                timeSinceBoxSpawn++;
+            }
         }
 
         height--;

@@ -3,13 +3,12 @@ package com.nettakrim.ice_boat.items;
 import com.nettakrim.ice_boat.IceBoat;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.EulerAngle;
+import org.bukkit.util.Transformation;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 public class ItemBox extends BukkitRunnable {
 
@@ -18,47 +17,62 @@ public class ItemBox extends BukkitRunnable {
     private final Material item;
     private final Location location;
 
-    private ArmorStand armorStand;
-    private Location particleLocation;
+    private ItemDisplay display;
+    private Location displayLocation;
 
     private int delay;
     private int activeTicks;
-    private double headRotation;
+    private float rotation;
 
-    public ItemBox(IceBoat plugin, Material item, Location location, int delay) {
+    public ItemBox(IceBoat plugin, Material item, Location location, int delay, double displayHeight) {
         this.plugin = plugin;
         this.item = item;
         this.location = location;
-        start(delay);
+        start(delay, displayHeight);
     }
 
-    private void start(int delay) {
-        armorStand = (ArmorStand)location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
-        armorStand.setItem(EquipmentSlot.HEAD, new ItemStack(Material.OBSIDIAN));
-        armorStand.setMarker(true);
-        armorStand.setInvisible(true);
-        armorStand.addScoreboardTag("ItemBox");
-        particleLocation = location.clone();
-        particleLocation.add(0, 1.75, 0);
+    private void start(int delay, double displayHeight) {
+        displayLocation = location.clone();
+        displayLocation.add(0, displayHeight, 0);
+        display = (ItemDisplay) location.getWorld().spawnEntity(displayLocation, EntityType.ITEM_DISPLAY);
+        display.setViewRange(1000);
+        Quaternionf identity = new Quaternionf(0,0,0,1);
+        Transformation transformation = new Transformation(new Vector3f(0,0,0), identity, new Vector3f(0.6f, 0.6f, 0.6f), identity);
+        display.setTransformation(transformation);
+        display.setItemStack(new ItemStack(Material.OBSIDIAN));
+        display.addScoreboardTag("ItemBox");
         this.delay = delay;
     }
 
     @Override
     public void run() {
-        armorStand.setHeadPose(new EulerAngle(0, headRotation, 0));
-        headRotation = (headRotation+0.1)%(Math.PI*2);
+        if (rotation%20 == 0) {
+            Transformation transformation = display.getTransformation();
+            display.setInterpolationDuration(21);
+            display.setInterpolationDelay(-1);
+            transformation.getRightRotation().set(new Quaternionf().rotationY((rotation/30f*(float)Math.PI)));
+            transformation.getTranslation().set(0, Math.sin(rotation/30)/15, 0);
+            display.setTransformation(transformation);
+        }
+        rotation+=1;
+
+        if (!location.getBlock().isSolid()) {
+            breakBox();
+            cancel();
+        }
 
         if (activeTicks == 0) {
-            location.getWorld().spawnParticle(Particle.REVERSE_PORTAL, particleLocation, 2, 0.5, 0.4, 0.5, 0);
+            location.getWorld().spawnParticle(Particle.REVERSE_PORTAL, displayLocation, 1, 0.5, 0.4, 0.5, 0, null, true);
+            location.getWorld().spawnParticle(Particle.REVERSE_PORTAL, displayLocation, 1, 0.5, 0.4, 0.5, 0, null, false);
             if (plugin.getHeight() < location.getY()-3) {
-                armorStand.setItem(EquipmentSlot.HEAD, new ItemStack(Material.CRYING_OBSIDIAN));
+                display.setItemStack(new ItemStack(Material.CRYING_OBSIDIAN));
                 for (double r = 0; r < 360; r++) {
                     double rad = Math.toRadians(r);
                     double d = plugin.random.nextDouble(0.75, 1.5);
                     double x = Math.sin(rad) * d;
                     double z = Math.cos(rad) * d;
                     double t = plugin.random.nextDouble(0.8, 1.2);
-                    location.getWorld().spawnParticle(Particle.PORTAL, particleLocation, 0, x, -0.5, z, t);
+                    location.getWorld().spawnParticle(Particle.PORTAL, displayLocation, 0, x, -0.5, z, t, null, r%2 == 0);
                 }
                 activeTicks = 1;
             }
@@ -66,8 +80,8 @@ public class ItemBox extends BukkitRunnable {
         }
 
         if (activeTicks == delay) {
-            armorStand.setItem(EquipmentSlot.HEAD, new ItemStack(Material.GOLD_BLOCK));
-            plugin.playSoundLocallyToAll(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, particleLocation, 0.8f, 1.2f);
+            display.setItemStack(new ItemStack(Material.GOLD_BLOCK));
+            plugin.playSoundLocallyToAll(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, displayLocation, 0.8f, 1.2f);
         }
 
         if (activeTicks <= delay) {
@@ -80,18 +94,22 @@ public class ItemBox extends BukkitRunnable {
             //location is 0.5 blocks below playerPos
             if (playerPos.getY() > location.getY() && playerPos.getY() < location.getY()+1 && location.distanceSquared(playerPos) < 8) {
                 player.getInventory().addItem(new ItemStack(item));
-                plugin.playSoundGloballyToPlayer(player, Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, particleLocation, true, 0.8f, 1.2f);
-                BlockData blockData = Material.GOLD_BLOCK.createBlockData();
-                location.getWorld().spawnParticle(Particle.BLOCK_CRACK, particleLocation, 50, 0.35, 0.35, 0.35, blockData);
+                breakBox();
                 cancel();
                 return;
             }
         }
     }
 
+    private void breakBox() {
+        plugin.playSoundLocallyToAll(Sound.BLOCK_AMETHYST_BLOCK_BREAK, displayLocation, 0.8f, 1.2f);
+        BlockData blockData = display.getItemStack().getType().createBlockData();
+        location.getWorld().spawnParticle(Particle.BLOCK_CRACK, displayLocation, 50, 0.35, 0.35, 0.35, 1, blockData, true);
+    }
+
     @Override
     public void cancel() {
         super.cancel();
-        armorStand.remove();
+        display.remove();
     }
 }

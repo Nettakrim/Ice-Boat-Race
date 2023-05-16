@@ -19,12 +19,20 @@ generation:
   lengthScale: 40.0
 items:
   levitationItems: 4
+  levitationBoxWeight: 0
   levitationDuration: 100
   teleporterItems: 5
+  teleporterBoxWeight: 0
   blindnessItems: 0
+  blindnessBoxWeight: 1
   blindnessLingerDuration: 300
   blindnessEffectDuration: 40
   melterItems: 0
+  melterBoxWeight: 1
+  melterDuration: 300
   snowItems: 0
-
+  snowBoxWeight: 1
+  snowDropBackwards: 4
   boxDelay: 45
+  boxHeight: 1.6
+  boxSpawnRate: 2.0

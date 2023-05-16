@@ -22,6 +22,7 @@ public abstract class Path {
 
     private int expand;
     public int height;
+    public float radius;
 
     private int blocks;
 
@@ -39,6 +40,7 @@ public abstract class Path {
     public void generate(World world, float radius, int height, float blueIceSize, boolean isFinishLine) {
         this.expand = ((int)radius)+1;
         this.height = height;
+        this.radius = radius;
         this.blocks = 0;
 
         int exitX = (int)(exit.point.x);
@@ -52,6 +54,7 @@ public abstract class Path {
                 if (cutoff) continue;
                 float distance = getDistanceField(new Vector2f(x, y));
                 if (distance < radius) {
+                    if (world.getBlockAt(x, height+1, y).isSolid()) continue;
                     Material material = Material.PACKED_ICE;
                     if (distance < radius*blueIceSize) {
                         material = Material.BLUE_ICE;
@@ -101,60 +104,71 @@ public abstract class Path {
             return;
         }
 
-        float areaToDecay = (approximation.getArea(expand)/256)*decaySpeed;
+        float areaToDecay = ((float)approximation.getArea(expand)/256)*decaySpeed;
         int decayBlocks = (int)areaToDecay;
         if (random.nextFloat() < areaToDecay % 1) decayBlocks++;
         for (int a = 0; a < decayBlocks; a++) {
-            int x = random.nextInt(approximation.minX-expand, approximation.maxX+expand);
-            int y = random.nextInt(approximation.minY-expand, approximation.maxY+expand);
-            Block block = world.getBlockAt(x, height, y);
-            if (block.isSolid()) {
-                Material material = block.getType();
-                if (melt(block, material, decayStage)) {
-                    meltAdjacent(world, material, x+1, y, height);
-                    meltAdjacent(world, material, x-1, y, height);
-                    meltAdjacent(world, material, x, y+1, height);
-                    meltAdjacent(world, material, x, y-1, height);
-                }
-            } else if (decayStage >= 1) {
-                meltAdjacent(world, Material.AIR, x+1, y, height);
-                meltAdjacent(world, Material.AIR, x-1, y, height);
-                meltAdjacent(world, Material.AIR, x, y+1, height);
-                meltAdjacent(world, Material.AIR, x, y-1, height);
-            }
+            int x = random.nextInt(approximation.minX-expand, approximation.maxX+expand+1);
+            int y = random.nextInt(approximation.minY-expand, approximation.maxY+expand+1);
+            melt(world, x, y, decayStage);
         }
     }
 
-    private boolean melt(Block block, Material material, int decayStage) {
+    public void melt(World world, int x, int y, int decayStage) {
+        Block block = world.getBlockAt(x, height, y);
+        if (block.isSolid()) {
+            Material material = block.getType();
+            if (meltBlock(block, material, decayStage)) {
+                meltAdjacent(world, material, x+1, y, height);
+                meltAdjacent(world, material, x-1, y, height);
+                meltAdjacent(world, material, x, y+1, height);
+                meltAdjacent(world, material, x, y-1, height);
+            }
+        } else if (decayStage >= 1) {
+            meltAdjacent(world, Material.AIR, x+1, y, height);
+            meltAdjacent(world, Material.AIR, x-1, y, height);
+            meltAdjacent(world, Material.AIR, x, y+1, height);
+            meltAdjacent(world, Material.AIR, x, y-1, height);
+        }
+    }
+
+    private boolean meltBlock(Block block, Material material, int decayStage) {
         if (material == Material.BLUE_ICE) {
             block.setType(Material.PACKED_ICE);
             return true;
-        } else if (material == Material.PACKED_ICE && decayStage >= 1) {
-            block.setType(Material.ICE);
-            return true;
-        } else if (material == Material.ICE && decayStage >= 2) {
-            block.setType(Material.AIR);
-            blocks--;
+        } else if (material == Material.PACKED_ICE) {
+            if (decayStage >= 1) {
+                block.setType(Material.ICE);
+                return true;
+            }
+        } else if (material == Material.ICE) {
+            if (decayStage >= 2) {
+                block.setType(Material.AIR);
+                blocks--;
+                return true;
+            }
+        } else if (decayStage >= 1) {
+            block.setType(decayStage >= 3 ? Material.ICE : Material.PACKED_ICE);
             return true;
         }
         return false;
     }
 
-    private void meltAdjacent(World world, Material material, int x, int y, int height) {
+    private void meltAdjacent(World world, Material justMelted, int x, int y, int height) {
         Block block = world.getBlockAt(x, height, y);
         if (!block.isSolid()) return;
         //melts adjacent if it is a higher tier ice than the one that just melted
-        Material material2 = block.getType();
-        if (material2 == Material.BLUE_ICE) {
-            melt(block, material2, 2);
+        Material adjacent = block.getType();
+        if (adjacent == Material.BLUE_ICE) {
+            meltBlock(block, adjacent, 2);
             return;
         }
-        if (material == Material.BLUE_ICE) return;
+        if (justMelted == Material.BLUE_ICE) return;
 
-        if (material2 == Material.PACKED_ICE) {
-            melt(block, material2, 2);
-        } else if (material2 == Material.ICE && material != Material.PACKED_ICE) {
-            melt(block, material2, 2);
+        if (adjacent == Material.PACKED_ICE) {
+            meltBlock(block, adjacent, 2);
+        } else if (adjacent == Material.ICE && justMelted != Material.PACKED_ICE) {
+            meltBlock(block, adjacent, 2);
         }
     }
 
