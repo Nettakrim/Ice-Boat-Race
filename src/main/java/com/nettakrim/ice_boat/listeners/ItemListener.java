@@ -192,12 +192,14 @@ public class ItemListener implements Listener {
     private void turnIntoSquid(Player player, Entity vehicle) {
         plugin.temporaryAllowDismount = true;
         Entity squid = player.getWorld().spawnEntity(player.getLocation(), EntityType.SQUID);
-        squid.setInvulnerable(true);
+        squid.customName(Component.text(player.getName()));
+        squid.setCustomNameVisible(true);
         plugin.resetClearEntities.add(squid);
         plugin.resetClearEntities.add(vehicle);
         vehicle.removePassenger(player);
         vehicle.addPassenger(squid);
         plugin.killPlayer(player, false, Component.text(player.getName()).append(Component.text(" Turned into a Squid!")));
+        player.setSpectatorTarget(squid);
         plugin.temporaryAllowDismount = false;
     }
 
