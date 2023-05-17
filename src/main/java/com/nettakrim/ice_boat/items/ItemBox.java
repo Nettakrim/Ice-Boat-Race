@@ -24,14 +24,14 @@ public class ItemBox extends BukkitRunnable {
     private int activeTicks;
     private float rotation;
 
-    public ItemBox(IceBoat plugin, Material item, Location location, int delay, double displayHeight) {
+    public ItemBox(IceBoat plugin, Material item, Location location, int delay, double displayHeight, boolean startUnlocked) {
         this.plugin = plugin;
         this.item = item;
         this.location = location;
-        start(delay, displayHeight);
+        start(delay, displayHeight, startUnlocked);
     }
 
-    private void start(int delay, double displayHeight) {
+    private void start(int delay, double displayHeight, boolean startUnlocked) {
         displayLocation = location.clone();
         displayLocation.add(0, displayHeight, 0);
         display = (ItemDisplay) location.getWorld().spawnEntity(displayLocation, EntityType.ITEM_DISPLAY);
@@ -42,6 +42,9 @@ public class ItemBox extends BukkitRunnable {
         display.setItemStack(new ItemStack(Material.OBSIDIAN));
         display.addScoreboardTag("ItemBox");
         this.delay = delay;
+        if (startUnlocked) {
+            unlock();
+        }
     }
 
     @Override
@@ -65,16 +68,7 @@ public class ItemBox extends BukkitRunnable {
             location.getWorld().spawnParticle(Particle.REVERSE_PORTAL, displayLocation, 1, 0.5, 0.4, 0.5, 0, null, true);
             location.getWorld().spawnParticle(Particle.REVERSE_PORTAL, displayLocation, 1, 0.5, 0.4, 0.5, 0, null, false);
             if (plugin.getHeight() < location.getY()-3) {
-                display.setItemStack(new ItemStack(Material.CRYING_OBSIDIAN));
-                for (double r = 0; r < 360; r++) {
-                    double rad = Math.toRadians(r);
-                    double d = plugin.random.nextDouble(0.75, 1.5);
-                    double x = Math.sin(rad) * d;
-                    double z = Math.cos(rad) * d;
-                    double t = plugin.random.nextDouble(0.8, 1.2);
-                    location.getWorld().spawnParticle(Particle.PORTAL, displayLocation, 0, x, -0.5, z, t, null, r%2 == 0);
-                }
-                activeTicks = 1;
+                unlock();
             }
             return;
         }
@@ -99,6 +93,19 @@ public class ItemBox extends BukkitRunnable {
                 return;
             }
         }
+    }
+
+    private void unlock() {
+        display.setItemStack(new ItemStack(Material.CRYING_OBSIDIAN));
+        for (double r = 0; r < 360; r++) {
+            double rad = Math.toRadians(r);
+            double d = plugin.random.nextDouble(0.75, 1.5);
+            double x = Math.sin(rad) * d;
+            double z = Math.cos(rad) * d;
+            double t = plugin.random.nextDouble(0.8, 1.2);
+            location.getWorld().spawnParticle(Particle.PORTAL, displayLocation, 0, x, -0.5, z, t, null, r%2 == 0);
+        }
+        activeTicks = 1;
     }
 
     private void breakBox() {
