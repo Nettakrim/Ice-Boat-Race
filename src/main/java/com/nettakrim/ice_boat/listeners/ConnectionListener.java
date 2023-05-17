@@ -53,7 +53,7 @@ public class ConnectionListener implements Listener {
         plugin.temporaryAllowDismount = true;
 
         if (plugin.gameState == GameState.PLAYING) {
-            plugin.killPlayer(player);
+            plugin.killPlayer(player, true);
         } else {
             plugin.waitingPlayerLeave(player);
             if (player.isInsideVehicle()) player.getVehicle().remove();
@@ -67,7 +67,7 @@ public class ConnectionListener implements Listener {
             plugin.progress.addPlayer(player);
         }
         player.setGameMode(GameMode.ADVENTURE);
-        player.teleport(new Location(player.getWorld(), 0.5, plugin.getConfig().getDouble("world.spawnHeight"), 0.5));
+        player.teleport(new Location(player.getWorld(), 0.5, plugin.getConfig().getDouble("world.spawnHeight"), 0.5, -90, 0));
         plugin.temporaryAllowDismount = false;
     }
 }

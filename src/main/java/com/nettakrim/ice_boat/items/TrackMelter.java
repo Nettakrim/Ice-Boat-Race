@@ -42,7 +42,7 @@ public class TrackMelter extends BukkitRunnable {
         int x = plugin.random.nextInt(-radius, radius+1);
         int y = plugin.random.nextInt(-radius, radius+1);
         if (x*x + y*y < radius*radius) {
-            path.melt(world, x+ox, y+oy, (int)((startDuration-duration)/40));
+            path.melt(world, x+ox, y+oy, (int)((startDuration-duration)/30));
         }
         world.spawnParticle(Particle.FLAME, location, 5, radius, 1, radius, 0.1);
         duration--;

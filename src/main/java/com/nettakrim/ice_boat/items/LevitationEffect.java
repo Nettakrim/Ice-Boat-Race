@@ -15,7 +15,6 @@ public class LevitationEffect extends BukkitRunnable {
     
     private final IceBoat plugin;
 
-    private final Entity vehicle;
     private final Player player;
     private final World world;
 
@@ -23,9 +22,8 @@ public class LevitationEffect extends BukkitRunnable {
     private long duration;
     private double driftCorrection;
 
-    public LevitationEffect(IceBoat plugin, Entity vehicle, Player player, long duration) {
+    public LevitationEffect(IceBoat plugin, Player player, long duration) {
         this.plugin = plugin;
-        this.vehicle = vehicle;
         this.player = player;
         this.world = player.getWorld();
         
@@ -36,6 +34,7 @@ public class LevitationEffect extends BukkitRunnable {
         this.startDuration = duration;
         this.duration = duration;
 
+        Entity vehicle = player.getVehicle();
         if (!vehicle.isOnGround()) {
             Vector v = vehicle.getVelocity();
             v.setY(0);
@@ -54,6 +53,7 @@ public class LevitationEffect extends BukkitRunnable {
         Location location = player.getLocation();
         world.spawnParticle(Particle.FIREWORKS_SPARK, location, 0, 0, 0.1, 0);
         if (location.getY() < driftCorrection) {
+            Entity vehicle = player.getVehicle();
             Vector v = vehicle.getVelocity();
             v.setY(0);
             vehicle.setVelocity(v);
@@ -63,24 +63,18 @@ public class LevitationEffect extends BukkitRunnable {
         player.setExp(((float)duration)/startDuration);
         player.setLevel((int)(duration/20)+1);
         if (duration <= 0) {
-            cancel();
+            stop(player.getVehicle(), true);
         }
     }
 
-    @Override
-    public void cancel() {
-        super.cancel();
+    public void stop(Entity vehicle, boolean makeNoise) {
         player.setExp(0);
         player.setLevel(0);
         vehicle.setGravity(true);
-        world.spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1, null);
-        plugin.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation(), true, 0.95f, 1.05f);
-    }
-
-    public void cancelSilently() {
-        super.cancel();
-        player.setExp(0);
-        player.setLevel(0);
-        vehicle.setGravity(true);
+        if (makeNoise) {
+            world.spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1, null);
+            plugin.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation(), true, 0.95f, 1.05f);
+        }
+        cancel();
     }
 }

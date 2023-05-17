@@ -62,13 +62,8 @@ public class BlindnessEffect extends BukkitRunnable {
 
         duration--;
         if (duration <= 0) {
+            plugin.playSoundLocallyToAll(Sound.BLOCK_CONDUIT_DEACTIVATE, location, 0.9f, 1.1f);
             cancel();
         }
-    }
-
-    @Override
-    public void cancel() {
-        super.cancel();
-        plugin.playSoundLocallyToAll(Sound.BLOCK_CONDUIT_DEACTIVATE, location, 0.9f, 1.1f);
     }
 }

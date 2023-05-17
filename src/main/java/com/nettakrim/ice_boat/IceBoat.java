@@ -1,9 +1,6 @@
 package com.nettakrim.ice_boat;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 import com.nettakrim.ice_boat.items.ItemBox;
 import org.bukkit.Bukkit;
@@ -24,6 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.joml.Vector2f;
@@ -93,12 +91,13 @@ public class IceBoat extends JavaPlugin {
     private boolean gameNearlyOver;
 
     private BukkitTask winParticles;
-
-    private ArrayList<ItemBox> itemBoxes;
     private ArrayList<Material> itemPool;
     private int timeSinceBoxSpawn;
 
     private ArrayList<Boat> waitingBoats;
+
+    public ArrayList<BukkitRunnable> resetClearRunnables;
+    public ArrayList<Entity> resetClearEntities;
 
     public boolean temporaryAllowDismount = false;
 
@@ -150,7 +149,8 @@ public class IceBoat extends JavaPlugin {
 
         players = new ArrayList<>();
         waitingBoats = new ArrayList<>();
-        itemBoxes = new ArrayList<>();
+        resetClearRunnables = new ArrayList<>();
+        resetClearEntities = new ArrayList<>();
 
         startHeight = getConfig().getInt("game.startHeight");
         endHeight  = getConfig().getInt("game.endHeight");
@@ -312,12 +312,8 @@ public class IceBoat extends JavaPlugin {
         BukkitScheduler scheduler = Bukkit.getScheduler();
         scheduler.runTaskLater(this, this::returnToLobby, 100L);
 
-        for (ItemBox itemBox : itemBoxes) {
-            itemBox.cancel();
-        }
-
         if (winner != null) {
-            playerDatas.get(winner.getUniqueId()).cancelLevitation(true);
+            playerDatas.get(winner.getUniqueId()).cancelLevitation(false, null);
 
             Location location = winner.getLocation();
             location.add(0,1,0);
@@ -357,6 +353,13 @@ public class IceBoat extends JavaPlugin {
             location.subtract(location.getDirection().multiply(0.1));
             player.teleport(location);
             player.getInventory().clear();
+        }
+
+        for (Entity entity : resetClearEntities) {
+            entity.remove();
+        }
+        for (BukkitRunnable runnable : resetClearRunnables) {
+            runnable.cancel();
         }
     }
 
@@ -450,8 +453,8 @@ public class IceBoat extends JavaPlugin {
             if ((1-(random.nextFloat()*random.nextFloat()))/((timeSinceBoxSpawn+1)/2f) < (pos.length()/turnZoneEnd)*getConfig().getDouble("items.boxSpawnRate")) {
                 Location location = new Location(world, pos.x, height + 0.5, pos.y);
                 ItemBox itemBox = new ItemBox(this, itemPool.get(random.nextInt(itemPool.size())), location, getConfig().getInt("items.boxDelay"), getConfig().getDouble("items.boxHeight"), players.size()==1);
-                itemBoxes.add(itemBox);
                 itemBox.runTaskTimer(this, 0L, 0L);
+                resetClearRunnables.add(itemBox);
                 timeSinceBoxSpawn = 0;
             } else {
                 timeSinceBoxSpawn++;
@@ -492,11 +495,15 @@ public class IceBoat extends JavaPlugin {
 
     public void killIfLowEnough(double testHeight, Player player) {
         if (testHeight < height-deathDistance) {
-            killPlayer(player);
+            killPlayer(player, true);
         }
     }
 
-    public void killPlayer(Player player) {
+    public void killPlayer(Player player, boolean explode) {
+        killPlayer(player, explode, Component.text(player.getName()).append(Component.text(" Exploded!")));
+    }
+
+    public void killPlayer(Player player, boolean explode, TextComponent message) {
         if (player.isInsideVehicle()) {
             Entity vehicle = player.getVehicle();
             //save the second passenger
@@ -519,12 +526,17 @@ public class IceBoat extends JavaPlugin {
         player.setGameMode(GameMode.SPECTATOR);
         players.remove(player);
         player.getInventory().clear();
-        world.spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 50, 0, 0, 0, 0.5, null, true);
-        world.spawnParticle(Particle.EXPLOSION_LARGE, player.getLocation(), 10, 1, 1, 1, 1, null, true);
-        playSoundLocallyToAll(Sound.ENTITY_GENERIC_EXPLODE, player.getLocation(), 0.9f, 1.1f);
 
-        TextComponent textComponent = Component.text(player.getName()).append(Component.text(" Exploded!"));
-        world.sendMessage(textComponent);
+        if (explode) {
+            Location location = player.getLocation().add(0, 1, 0);
+            world.spawnParticle(Particle.SMOKE_LARGE, location, 50, 0, 0, 0, 0.5, null, true);
+            world.spawnParticle(Particle.EXPLOSION_LARGE, location, 10, 1, 1, 1, 1, null, true);
+            playSoundLocallyToAll(Sound.ENTITY_GENERIC_EXPLODE, location, 0.9f, 1.1f);
+        }
+
+        if (message != null) {
+            world.sendMessage(message);
+        }
 
         if (players.size() == 1) {
             endRound(players.get(0), false);

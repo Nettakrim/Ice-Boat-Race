@@ -148,6 +148,9 @@ public abstract class Path {
                 return true;
             }
         } else if (decayStage >= 1) {
+            if (material == Material.LIME_WOOL) {
+                return false;
+            }
             block.setType(decayStage >= 3 ? Material.ICE : Material.PACKED_ICE);
             return true;
         }

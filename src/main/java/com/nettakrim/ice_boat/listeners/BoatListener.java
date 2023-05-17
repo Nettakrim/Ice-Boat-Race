@@ -1,16 +1,19 @@
 package com.nettakrim.ice_boat.listeners;
 
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Snowman;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.inventory.ItemStack;
 import org.spigotmc.event.entity.EntityDismountEvent;
 import org.spigotmc.event.entity.EntityMountEvent;
 
@@ -59,7 +62,7 @@ public class BoatListener implements Listener {
             if (plugin.gameState != GameState.PLAYING) return;
 
             event.setCancelled(true);
-            plugin.playerDatas.get(player.getUniqueId()).cancelLevitation(false);
+            plugin.playerDatas.get(player.getUniqueId()).cancelLevitation(true, event.getDismounted());
         }
     }
 
@@ -108,5 +111,35 @@ public class BoatListener implements Listener {
         if (plugin.gameState != GameState.PLAYING) return;
 
         if (event.getCause().equals(DamageCause.SUFFOCATION)) event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onEntityHit(EntityDamageEvent event) {
+        Entity entity = event.getEntity();
+        if (entity.getWorld() != plugin.world) return;
+        event.setCancelled(true);
+
+        if (entity instanceof Snowman) {
+            if (event.getCause() != DamageCause.ENTITY_ATTACK) return;
+            EntityDamageByEntityEvent byEntityEvent = (EntityDamageByEntityEvent) event;
+
+            if (byEntityEvent.getDamager() instanceof Player player) {
+                player.getInventory().addItem(new ItemStack(Material.SNOWBALL));
+
+                BlockData blockData = Material.SNOW_BLOCK.createBlockData();
+                Location location = entity.getLocation();
+                location.add(0,1,0);
+                location.getWorld().spawnParticle(Particle.BLOCK_CRACK, location, 50, 0.5, 1, 0.5, blockData);
+                plugin.playSoundLocallyToAll(Sound.ENTITY_SNOW_GOLEM_DEATH, location, 0.85f, 1.15f);
+
+                entity.remove();
+            }
+        }
+    }
+
+    @EventHandler
+    public void onVehicleHit(VehicleDamageEvent event) {
+        if (event.getVehicle().getWorld() != plugin.world) return;
+        event.setCancelled(true);
     }
 }
