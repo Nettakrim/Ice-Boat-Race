@@ -24,6 +24,8 @@ public abstract class Path {
     public int height;
     public float radius;
 
+    private boolean isFinishLine;
+
     private int blocks;
 
     protected Path(End entrance, End exit) {
@@ -41,6 +43,7 @@ public abstract class Path {
         this.expand = ((int)radius)+1;
         this.height = height;
         this.radius = radius;
+        this.isFinishLine = isFinishLine;
         this.blocks = 0;
 
         int exitX = (int)(exit.point.x);
@@ -67,7 +70,6 @@ public abstract class Path {
         }
 
         if (isFinishLine) {
-            expand++;
             int winCircleBounds = ((int)(radius+0.5f))+1;
             float winCircle = (radius+0.5f)*(radius+0.5f);
             int offsetX = Math.round(exit.point.x + exit.angle.x);
@@ -91,6 +93,16 @@ public abstract class Path {
         for (int x = approximation.minX-expand; x < approximation.maxX+expand; x++) {
             for (int y = approximation.minY-expand; y < approximation.maxY+expand; y++) {
                 world.getBlockAt(x, height, y).setType(Material.AIR);
+            }
+        }
+        if (isFinishLine) {
+            int winCircleBounds = ((int)(radius+0.5f))+1;
+            int offsetX = Math.round(exit.point.x + exit.angle.x);
+            int offsetY = Math.round(exit.point.y + exit.angle.y);
+            for (int x = -winCircleBounds; x < winCircleBounds; x++) {
+                for (int y = -winCircleBounds; y < winCircleBounds; y++) {
+                    world.getBlockAt(x+offsetX, height, y+offsetY).setType(Material.AIR);
+                }
             }
         }
         blocks = 0;

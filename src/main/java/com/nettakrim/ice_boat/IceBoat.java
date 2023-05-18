@@ -452,7 +452,7 @@ public class IceBoat extends JavaPlugin {
             Vector2f pos = path.getPosition(random.nextFloat(0.3f, 0.7f));
             if ((1-(random.nextFloat()*random.nextFloat()))/((timeSinceBoxSpawn+1)/2f) < (pos.length()/turnZoneEnd)*getConfig().getDouble("items.boxSpawnRate")) {
                 Location location = new Location(world, pos.x, height + 0.5, pos.y);
-                ItemBox itemBox = new ItemBox(this, itemPool.get(random.nextInt(itemPool.size())), location, getConfig().getInt("items.boxDelay"), getConfig().getDouble("items.boxHeight"), players.size()==1);
+                ItemBox itemBox = new ItemBox(this, itemPool.get(random.nextInt(itemPool.size())), location, getConfig().getInt("items.boxDelay"), getConfig().getDouble("items.boxHeight"));
                 itemBox.runTaskTimer(this, 0L, 0L);
                 resetClearRunnables.add(itemBox);
                 timeSinceBoxSpawn = 0;

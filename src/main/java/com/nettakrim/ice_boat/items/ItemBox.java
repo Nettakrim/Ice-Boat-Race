@@ -24,14 +24,14 @@ public class ItemBox extends BukkitRunnable {
     private int activeTicks;
     private float rotation;
 
-    public ItemBox(IceBoat plugin, Material item, Location location, int delay, double displayHeight, boolean startUnlocked) {
+    public ItemBox(IceBoat plugin, Material item, Location location, int delay, double displayHeight) {
         this.plugin = plugin;
         this.item = item;
         this.location = location;
-        start(delay, displayHeight, startUnlocked);
+        start(delay, displayHeight, plugin.players.size());
     }
 
-    private void start(int delay, double displayHeight, boolean startUnlocked) {
+    private void start(int delay, double displayHeight, int players) {
         displayLocation = location.clone();
         displayLocation.add(0, displayHeight, 0);
         display = (ItemDisplay) location.getWorld().spawnEntity(displayLocation, EntityType.ITEM_DISPLAY);
@@ -42,7 +42,9 @@ public class ItemBox extends BukkitRunnable {
         display.setItemStack(new ItemStack(Material.OBSIDIAN));
         display.addScoreboardTag("ItemBox");
         this.delay = delay;
-        if (startUnlocked) {
+        if (players == 2) {
+            activeTicks = -80;
+        } else if (players < 2) {
             unlock();
         }
     }
@@ -64,11 +66,16 @@ public class ItemBox extends BukkitRunnable {
             cancel();
         }
 
-        if (activeTicks == 0) {
+        if (activeTicks <= 0) {
             location.getWorld().spawnParticle(Particle.REVERSE_PORTAL, displayLocation, 1, 0.5, 0.4, 0.5, 0, null, true);
             location.getWorld().spawnParticle(Particle.REVERSE_PORTAL, displayLocation, 1, 0.5, 0.4, 0.5, 0, null, false);
             if (plugin.getHeight() < location.getY()-3) {
                 unlock();
+            } else if (activeTicks < 0) {
+                activeTicks++;
+                if (activeTicks == 0) {
+                    unlock();
+                }
             }
             return;
         }
