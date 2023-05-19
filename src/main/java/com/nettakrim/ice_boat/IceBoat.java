@@ -312,9 +312,11 @@ public class IceBoat extends JavaPlugin {
         BukkitScheduler scheduler = Bukkit.getScheduler();
         scheduler.runTaskLater(this, this::returnToLobby, 100L);
 
-        if (winner != null) {
-            playerDatas.get(winner.getUniqueId()).cancelLevitation(false, null);
+        for (PlayerData playerData : playerDatas.values()) {
+            playerData.clear();
+        }
 
+        if (winner != null) {
             Location location = winner.getLocation();
             location.add(0,1,0);
             world.spawnParticle(Particle.VILLAGER_HAPPY, location, 64, 4, 2, 4, 0.1, null, true);
@@ -523,6 +525,9 @@ public class IceBoat extends JavaPlugin {
             }
             vehicle.remove();
         }
+
+        playerDatas.get(player.getUniqueId()).cancelLevitation(false, null);
+
         player.setGameMode(GameMode.SPECTATOR);
         players.remove(player);
         player.getInventory().clear();

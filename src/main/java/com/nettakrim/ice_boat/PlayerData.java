@@ -25,4 +25,8 @@ public class PlayerData {
         if (vehicle == null) levitationEffect.stop(player.getVehicle(), makeNoise);
         else levitationEffect.stop(vehicle, makeNoise);
     }
+
+    public void clear() {
+        cancelLevitation(false, null);
+    }
 }
