@@ -184,7 +184,7 @@ public class IceBoat extends JavaPlugin {
         }
     }
 
-    public void waitingPlayerJoin(Player player) {
+    public void waitingPlayerJoin(Player player, Entity vehicle) {
         players.add(player);
         if (players.size() == getConfig().getInt("game.minPlayers")) {
             startCountdown();
@@ -197,7 +197,7 @@ public class IceBoat extends JavaPlugin {
         }
 
         player.getInventory().clear();
-        if (player.getVehicle().getPassengers().size() == 0) {
+        if (vehicle.getPassengers().size() == 0) {
             player.getInventory().addItem(new ItemStack(Material.FEATHER, getConfig().getInt("items.levitationItems")));
             player.getInventory().addItem(new ItemStack(Material.ENDER_PEARL, getConfig().getInt("items.teleporterItems")));
             player.getInventory().addItem(new ItemStack(Material.INK_SAC, getConfig().getInt("items.blindnessItems")));
@@ -222,7 +222,9 @@ public class IceBoat extends JavaPlugin {
     }
 
     private void cancelCountdown() {
-        countDownTask.cancel();
+        if (countDownTask != null) {
+            countDownTask.cancel();
+        }
         progress.setProgress(1);
     }
 
