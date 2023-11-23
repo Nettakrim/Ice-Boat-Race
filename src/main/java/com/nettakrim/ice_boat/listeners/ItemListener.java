@@ -2,7 +2,7 @@ package com.nettakrim.ice_boat.listeners;
 
 import com.nettakrim.ice_boat.items.SnowballTrail;
 import com.nettakrim.ice_boat.items.TrackMelter;
-import com.nettakrim.ice_boat.paths.Path;
+import com.nettakrim.ice_boat.generation.Path;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -149,7 +149,7 @@ public class ItemListener implements Listener {
     }
 
     private void metlerItemDrop(PlayerDropItemEvent event, Player player) {
-        Path path = plugin.getPath(player.getLocation().getBlockY());
+        Path path = plugin.generation.getPath(player.getLocation().getBlockY());
         if (path == null) {
             event.setCancelled(true);
             return;

@@ -87,16 +87,7 @@ public class BoatListener implements Listener {
         if (plugin.gameState != GameState.PLAYING) return;
 
         if (player.isInsideVehicle()) {
-            if (block.isSolid()) {
-                plugin.generateIfLowEnough(block.getY(), player);
-                if (material == Material.BLUE_ICE) {
-                    plugin.playerDatas.get(player.getUniqueId()).lastSafeLocation = player.getVehicle().getLocation();
-                } else if (material == Material.LIME_WOOL) {
-                    plugin.endRound(player, true);
-                }
-            } else {
-                plugin.killIfLowEnough(location.getY(), player);
-            }
+            plugin.updatePlayerPosition(player, block, material, location);
         } else if (!plugin.temporaryAllowDismount && player.getLocation().getY() < startHeight) {
             player.setGameMode(GameMode.SPECTATOR);
         }

@@ -69,7 +69,7 @@ public class ItemBox extends BukkitRunnable {
         if (activeTicks <= 0) {
             location.getWorld().spawnParticle(Particle.REVERSE_PORTAL, displayLocation, 1, 0.5, 0.4, 0.5, 0, null, true);
             location.getWorld().spawnParticle(Particle.REVERSE_PORTAL, displayLocation, 1, 0.5, 0.4, 0.5, 0, null, false);
-            if (plugin.getHeight() < location.getY()-3) {
+            if (plugin.generation.getCurrentHeight() < location.getY()-3) {
                 unlock();
             } else if (activeTicks < 0) {
                 activeTicks++;
@@ -106,10 +106,10 @@ public class ItemBox extends BukkitRunnable {
         display.setItemStack(new ItemStack(Material.CRYING_OBSIDIAN));
         for (double r = 0; r < 360; r++) {
             double rad = Math.toRadians(r);
-            double d = plugin.random.nextDouble(0.75, 1.5);
+            double d = IceBoat.random.nextDouble(0.75, 1.5);
             double x = Math.sin(rad) * d;
             double z = Math.cos(rad) * d;
-            double t = plugin.random.nextDouble(0.8, 1.2);
+            double t = IceBoat.random.nextDouble(0.8, 1.2);
             location.getWorld().spawnParticle(Particle.PORTAL, displayLocation, 0, x, -0.5, z, t, null, r%2 == 0);
         }
         activeTicks = 1;

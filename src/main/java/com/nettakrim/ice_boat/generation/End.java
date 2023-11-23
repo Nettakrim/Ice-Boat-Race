@@ -1,4 +1,4 @@
-package com.nettakrim.ice_boat.paths;
+package com.nettakrim.ice_boat.generation;
 
 import org.joml.Vector2f;
 
