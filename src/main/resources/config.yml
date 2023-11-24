@@ -22,6 +22,8 @@ items:
   levitationItems: 4
   levitationBoxWeight: 0
   levitationDuration: 100
+  levitationName: "Levitation"
+  levitationDescription: "Drop to blah blah\nnewline"
   teleporterItems: 5
   teleporterBoxWeight: 0
   blindnessItems: 0

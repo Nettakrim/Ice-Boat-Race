@@ -13,7 +13,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
-import org.bukkit.inventory.ItemStack;
 import org.spigotmc.event.entity.EntityDismountEvent;
 import org.spigotmc.event.entity.EntityMountEvent;
 
@@ -114,7 +113,7 @@ public class BoatListener implements Listener {
             EntityDamageByEntityEvent byEntityEvent = (EntityDamageByEntityEvent) event;
 
             if (byEntityEvent.getDamager() instanceof Player player) {
-                player.getInventory().addItem(new ItemStack(Material.SNOWBALL));
+                player.getInventory().addItem(plugin.items.getItem("snow", 1));
 
                 BlockData blockData = Material.SNOW_BLOCK.createBlockData();
                 Location location = entity.getLocation();

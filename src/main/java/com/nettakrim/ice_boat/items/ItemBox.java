@@ -14,7 +14,7 @@ public class ItemBox extends BukkitRunnable {
 
     private final IceBoat plugin;
 
-    private final Material item;
+    private final String itemKey;
     private final Location location;
 
     private ItemDisplay display;
@@ -24,9 +24,9 @@ public class ItemBox extends BukkitRunnable {
     private int activeTicks;
     private float rotation;
 
-    public ItemBox(IceBoat plugin, Material item, Location location, int delay, double displayHeight) {
+    public ItemBox(IceBoat plugin, String itemKey, Location location, int delay, double displayHeight) {
         this.plugin = plugin;
-        this.item = item;
+        this.itemKey = itemKey;
         this.location = location;
         start(delay, displayHeight, plugin.players.size());
     }
@@ -94,7 +94,7 @@ public class ItemBox extends BukkitRunnable {
             Location playerPos = player.getLocation();
             //location is 0.5 blocks below playerPos
             if (playerPos.getY() > location.getY() && playerPos.getY() < location.getY()+1 && location.distanceSquared(playerPos) < 8) {
-                player.getInventory().addItem(new ItemStack(item));
+                player.getInventory().addItem(plugin.items.getItem(itemKey, 1));
                 breakBox();
                 cancel();
                 return;
