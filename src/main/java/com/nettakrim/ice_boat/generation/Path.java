@@ -265,7 +265,7 @@ public abstract class Path {
         }
 
         //https://stackoverflow.com/questions/3838329/how-can-i-check-if-two-segments-intersect
-        // doesnt work with coliniar lines, but that *shouldnt* really ever happen here
+        // doesnt work with colinear lines, but that *shouldnt* really ever happen here
         private boolean ccw(Vector2f a, Vector2f b, Vector2f c) {
             return (c.y-a.y) * (b.x-a.x) > (b.y-a.y) * (c.x-a.x);
         }
