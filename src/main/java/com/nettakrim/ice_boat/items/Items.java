@@ -52,7 +52,7 @@ public class Items {
         ItemStack item = new ItemStack(material);
         ItemMeta itemMeta = item.getItemMeta();
 
-        String name = plugin.getConfig().getString("items."+key+"Name");
+        String name = plugin.getConfig().getString("items."+key+".name");
         if (name != null) {
             itemMeta.displayName(Component.text(name).style(itemName));
         }
