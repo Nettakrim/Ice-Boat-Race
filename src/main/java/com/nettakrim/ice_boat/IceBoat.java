@@ -243,12 +243,19 @@ public class IceBoat extends JavaPlugin {
         gameState = GameState.ENDING;
 
         if (winner != null) {
+            StringBuilder winnerName = new StringBuilder();
+            for (Entity passenger : winner.getVehicle().getPassengers()) {
+                if (winnerName.length() > 0) {
+                    winnerName.append(" and ");
+                }
+                winnerName.append(passenger.getName());
+            }
             progress.setTitle(winner.getName()+" Won !");
             TextComponent textComponent;
             if (reachedFinishLine) {
-                textComponent = Component.text(winner.getName()).append(Component.text(" Reached the Finish Line!"));
+                textComponent = Component.text(winnerName.toString()).append(Component.text(" Reached the Finish Line!"));
             } else {
-                textComponent = Component.text("Leaving ").append(Component.text(winner.getName())).append(Component.text(" as the Winner!"));
+                textComponent = Component.text("Leaving ").append(Component.text(winnerName.toString())).append(Component.text(" as the Winner!"));
             }
             world.sendMessage(textComponent);
         } else {
@@ -272,7 +279,7 @@ public class IceBoat extends JavaPlugin {
         }
 
         for (Player player : players) {
-            if (player != winner) {
+            if (player != winner && (!player.isInsideVehicle() || player.getVehicle() != winner.getVehicle())) {
                 player.setGameMode(GameMode.SPECTATOR);
                 if (player.isInsideVehicle()) {
                     player.getVehicle().remove();
@@ -389,9 +396,10 @@ public class IceBoat extends JavaPlugin {
             world.sendMessage(message);
         }
 
-        if (players.size() == 1) {
+        int playersRemaining = players.size();
+        if (playersRemaining == 1 || (playersRemaining == 2 && players.get(0).getVehicle() == players.get(1).getVehicle())) {
             endRound(players.get(0), false);
-        } else if (players.size() == 0) {
+        } else if (playersRemaining == 0) {
             endRound(null, false);
         }
     }
