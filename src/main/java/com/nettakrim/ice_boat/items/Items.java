@@ -57,7 +57,7 @@ public class Items {
             itemMeta.displayName(Component.text(name).style(itemName));
         }
 
-        String description = plugin.getConfig().getString("items."+key+"Description");
+        String description = plugin.getConfig().getString("items."+key+".description");
         if (description != null) {
             ArrayList<Component> list = new ArrayList<>();
             for (String s : description.split("\\n")) {
@@ -70,7 +70,7 @@ public class Items {
 
         items.put(key, item);
 
-        int amount = plugin.getConfig().getInt("items."+key+"BoxWeight");
+        int amount = plugin.getConfig().getInt("items."+key+".boxWeight");
         if (amount == 0) return;
         for (int x = 0; x < amount; x++) {
             itemPool.add(key);
@@ -88,7 +88,7 @@ public class Items {
     }
 
     private void addStartingItems(PlayerInventory inventory, ItemStack itemStack, String key) {
-        int amount = plugin.getConfig().getInt("items."+key+"Items");
+        int amount = plugin.getConfig().getInt("items."+key+".startingItems");
         if (amount == 0) {
             return;
         }
@@ -140,7 +140,7 @@ public class Items {
     private void levitationItemUse(Player player) {
         PlayerData playerData = plugin.playerDatas.get(player.getUniqueId());
         playerData.cancelLevitation(true, null);
-        LevitationEffect levitation = new LevitationEffect(plugin, player, plugin.getConfig().getLong("items.levitationDuration"));
+        LevitationEffect levitation = new LevitationEffect(plugin, player, plugin.getConfig().getLong("items.levitation.duration"));
         playerData.levitationEffect = levitation;
         levitation.runTaskTimer(plugin, 0L, 0L);
     }
@@ -161,7 +161,7 @@ public class Items {
     }
 
     private void blindnessItemUse(Player player) {
-        BlindnessEffect blindness = new BlindnessEffect(plugin, player, plugin.getConfig().getLong("items.blindnessLingerDuration"), plugin.getConfig().getInt("items.blindnessEffectDuration"));
+        BlindnessEffect blindness = new BlindnessEffect(plugin, player, plugin.getConfig().getLong("items.blindness.lingerDuration"), plugin.getConfig().getInt("items.blindnessEffectDuration"));
         blindness.runTaskTimer(plugin, 15L, 0L);
         plugin.resetClearRunnables.add(blindness);
     }
@@ -172,14 +172,14 @@ public class Items {
             event.setCancelled(true);
             return;
         }
-        TrackMelter trackMelter = new TrackMelter(plugin, player.getLocation(), path, (int)((path.radius+10)/3), plugin.getConfig().getLong("items.melterDuration"));
+        TrackMelter trackMelter = new TrackMelter(plugin, player.getLocation(), path, (int)((path.radius+10)/3), plugin.getConfig().getLong("items.melter.duration"));
         trackMelter.runTaskTimer(plugin, 0L, 0L);
         plugin.resetClearRunnables.add(trackMelter);
     }
 
     private void snowItemUse(Player player, boolean spawnGolem) {
         Location location = player.getLocation();
-        location.subtract(location.getDirection().setY(0).normalize().multiply(plugin.getConfig().getDouble("items.snowDropBackwards")));
+        location.subtract(location.getDirection().setY(0).normalize().multiply(plugin.getConfig().getDouble("items.snow.dropBackwards")));
         int ox = location.getBlock().getX();
         int oy = location.getBlock().getY();
         int oz = location.getBlock().getZ();

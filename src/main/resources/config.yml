@@ -19,23 +19,36 @@ generation:
   lengthScale: 40.0
 items:
   disableCraftingSecret: false
-  levitationItems: 4
-  levitationBoxWeight: 0
-  levitationDuration: 100
-  levitationName: "Levitation"
-  levitationDescription: "Drop to blah blah\nnewline"
-  teleporterItems: 5
-  teleporterBoxWeight: 0
-  blindnessItems: 0
-  blindnessBoxWeight: 1
-  blindnessLingerDuration: 300
-  blindnessEffectDuration: 40
-  melterItems: 0
-  melterBoxWeight: 1
-  melterDuration: 300
-  snowItems: 0
-  snowBoxWeight: 1
-  snowDropBackwards: 4
   boxDelay: 45
   boxHeight: 1.6
   boxSpawnRate: 2.0
+  levitation:
+    name: "Levitation"
+    description: "Drop to allow your boat to hover in the air for a short time\nCrouch to cancel early, your XP bar shows the time left"
+    startingItems: 4
+    boxWeight: 0
+    duration: 100
+  teleporter:
+    name: "Teleporter"
+    description: "Drop to teleport back to your last safe position\nThrow to teleport to where it lands"
+    startingItems: 5
+    boxWeight: 0
+  blindness:
+    name: "Blindness"
+    description: "Drop to create a dark cloud behind you that blinds enemies"
+    startingItems: 0
+    boxWeight: 1
+    lingerDuration: 300
+    effectDuration: 40
+  melter:
+    name: "Track Melter"
+    description: "Drop to melt the track behind you"
+    startingItems: 0
+    boxWeight: 1
+    duration: 300
+  snow:
+    name: "Snowball"
+    description: "Drop to create an area of snow behind you\nThrow to create a trail of snow beneath the snowball"
+    startingItems: 0
+    boxWeight: 1
+    dropBackwards: 4
