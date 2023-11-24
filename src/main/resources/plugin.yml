@@ -1,5 +1,5 @@
 name: Ice-Boat
-version: '2.4'
+version: '2.5'
 main: com.nettakrim.ice_boat.IceBoat
 description: Procedurally Generating Ice Boat Minigame!
 api-version: '1.20'

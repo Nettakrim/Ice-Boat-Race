@@ -42,7 +42,7 @@ items:
     effectDuration: 40
   melter:
     name: "Track Melter"
-    description: "Drop to melt the track behind you"
+    description: "Drop to slowly melt the track behind you"
     startingItems: 0
     boxWeight: 1
     duration: 300

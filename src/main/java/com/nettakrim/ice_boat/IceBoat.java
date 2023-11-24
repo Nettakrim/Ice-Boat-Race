@@ -310,10 +310,17 @@ public class IceBoat extends JavaPlugin {
     }
 
     public void updatePlayerPosition(Player player, Block block, Material material, Location location) {
+        Entity vehicle = player.getVehicle();
+        if (!player.isInsideVehicle() || vehicle.getPassengers().get(0) != player) return;
+        
         if (block.isSolid()) {
             generation.generateIfLowEnough(block.getY(), player);
             if (material == Material.BLUE_ICE) {
-                playerDatas.get(player.getUniqueId()).lastSafeLocation = player.getVehicle().getLocation();
+                playerDatas.get(player.getUniqueId()).lastSafeLocation = vehicle.getLocation();
+                if (vehicle.getPassengers().size() > 1) {
+                    Player other = (Player)vehicle.getPassengers().get(1);
+                    playerDatas.get(other.getUniqueId()).lastSafeLocation = vehicle.getLocation();
+                }
             } else if (material == Material.LIME_WOOL) {
                 endRound(player, true);
             }
@@ -333,24 +340,36 @@ public class IceBoat extends JavaPlugin {
     }
 
     public void killPlayer(Player player, boolean explode, TextComponent message) {
+        if (!players.contains(player)) {
+            return;
+        }
+
         if (player.isInsideVehicle()) {
             Entity vehicle = player.getVehicle();
             //save the second passenger
             if (vehicle.getPassengers().size() > 1) {
+                temporaryAllowDismount = true;
                 Entity other = vehicle.getPassengers().get(1);
                 Location location = playerDatas.get(player.getUniqueId()).lastSafeLocation;
-                other.teleport(location);
-                Boat newVehicle = (Boat)(vehicle.getWorld().spawnEntity(location, EntityType.BOAT));
                 if (other instanceof Player otherPlayer) {
-                    for (ItemStack itemStack : otherPlayer.getInventory().getContents()) {
-                        otherPlayer.getInventory().addItem(itemStack);
+                    for (ItemStack itemStack : player.getInventory().getContents()) {
+                        if (itemStack != null) {
+                            otherPlayer.getInventory().addItem(itemStack.clone());
+                        }
                     }
                     teleportEffect(location, otherPlayer);
                 }
+
+                Boat newVehicle = (Boat)(vehicle.getWorld().spawnEntity(location, EntityType.BOAT));
                 newVehicle.setBoatType(((Boat)vehicle).getBoatType());
+                newVehicle.setGravity(vehicle.hasGravity());
+                vehicle.remove();
+                other.teleport(location);
                 newVehicle.addPassenger(other);
+                temporaryAllowDismount = false;
+            } else {
+                vehicle.remove();
             }
-            vehicle.remove();
         }
 
         playerDatas.get(player.getUniqueId()).cancelLevitation(false, null);

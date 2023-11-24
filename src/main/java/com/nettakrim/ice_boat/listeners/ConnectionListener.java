@@ -48,7 +48,9 @@ public class ConnectionListener implements Listener {
     }
 
     private void removeFromGame(Player player) {
-        plugin.progress.removePlayer(player);
+        if (plugin.progress != null) {
+            plugin.progress.removePlayer(player);
+        }
         if (!plugin.players.contains(player)) return;
         plugin.temporaryAllowDismount = true;
 

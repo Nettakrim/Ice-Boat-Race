@@ -161,7 +161,7 @@ public class Items {
     }
 
     private void blindnessItemUse(Player player) {
-        BlindnessEffect blindness = new BlindnessEffect(plugin, player, plugin.getConfig().getLong("items.blindness.lingerDuration"), plugin.getConfig().getInt("items.blindnessEffectDuration"));
+        BlindnessEffect blindness = new BlindnessEffect(plugin, player, plugin.getConfig().getLong("items.blindness.lingerDuration"), plugin.getConfig().getInt("items.blindness.effectDuration"));
         blindness.runTaskTimer(plugin, 15L, 0L);
         plugin.resetClearRunnables.add(blindness);
     }

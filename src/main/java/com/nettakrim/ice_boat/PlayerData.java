@@ -9,7 +9,7 @@ import com.nettakrim.ice_boat.items.LevitationEffect;
 public class PlayerData {
     public PlayerData(Player player) {
         this.player = player;
-        this.lastSafeLocation = player.getLocation();
+        this.lastSafeLocation = player.getLocation().add(0,2,0);
     }
 
     public final Player player;

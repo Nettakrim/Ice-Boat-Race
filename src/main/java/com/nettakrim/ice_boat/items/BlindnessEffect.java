@@ -48,7 +48,7 @@ public class BlindnessEffect extends BukkitRunnable {
         world.spawnParticle(Particle.SQUID_INK, location, 5, rangeX, rangeY, rangeX, 0, null, true);
 
         for (Player other : plugin.players) {
-            if (other == owner) continue;
+            if (other.getVehicle() == owner.getVehicle()) continue;
             Location offset = other.getLocation().subtract(location);
             if (Math.abs(offset.getY()+rangeY) < rangeY && Math.abs(offset.getX()) < rangeX) {
                 other.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, effectDuration, 0, true, true, false));
@@ -56,7 +56,7 @@ public class BlindnessEffect extends BukkitRunnable {
             }
         }
 
-        if (plugin.random.nextFloat() < 0.1f) {
+        if (IceBoat.random.nextFloat() < 0.1f) {
             plugin.playSoundLocallyToAll(Sound.ENTITY_SQUID_AMBIENT, location, 0.75f, 1.25f);
         }
 
