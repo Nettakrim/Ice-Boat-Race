@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -89,6 +90,24 @@ public class ItemListener implements Listener {
             SnowballTrail snowballTrail = new SnowballTrail(plugin, snowball);
             snowballTrail.runTaskTimer(plugin, 5L, 0L);
             plugin.resetClearEntities.add(entity);
+        }
+    }
+
+    @EventHandler
+    public void onOffHand(PlayerSwapHandItemsEvent event) {
+        Player player = event.getPlayer();
+        if (player.getWorld() != plugin.world) return;
+
+        if (plugin.gameState != GameState.PLAYING) return;
+
+        if (event.getOffHandItem() != null && event.getOffHandItem().getAmount() > 0) {
+            //give offhanded items to other person in boat
+            if (player.isInsideVehicle() && player.getVehicle().getPassengers().size() > 1) {
+                Player other = (Player)(player.getVehicle().getPassengers().get(1-player.getVehicle().getPassengers().indexOf(player)));
+                other.getInventory().addItem(event.getOffHandItem());
+                player.getInventory().setItemInMainHand(null);
+                event.setCancelled(true);
+            }
         }
     }
 }

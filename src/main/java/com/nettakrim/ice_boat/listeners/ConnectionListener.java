@@ -48,6 +48,8 @@ public class ConnectionListener implements Listener {
     }
 
     private void removeFromGame(Player player) {
+        if (plugin.players == null) return;
+
         if (plugin.progress != null) {
             plugin.progress.removePlayer(player);
         }

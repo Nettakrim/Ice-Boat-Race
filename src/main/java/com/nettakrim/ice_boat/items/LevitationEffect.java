@@ -64,21 +64,33 @@ public class LevitationEffect extends BukkitRunnable {
         }
         if (duration > 0) {
             duration--;
-            player.setExp(((float)duration)/startDuration);
-            player.setLevel((int)(duration/20)+1);
+            setExpTimer(((float)duration)/startDuration, (int)(duration/20)+1);
         } else {
             stop(player.getVehicle(), true);
         }
     }
 
     public void stop(Entity vehicle, boolean makeNoise) {
-        player.setExp(0);
-        player.setLevel(0);
+        setExpTimer(0, 0);
         if (vehicle != null) vehicle.setGravity(true);
         if (makeNoise) {
             world.spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1, null);
             plugin.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation(), true, 0.95f, 1.05f);
         }
         cancel();
+    }
+
+    private void setExpTimer(float exp, int level) {
+        if (player.isInsideVehicle()) {
+            for (Entity entity : player.getVehicle().getPassengers()) {
+                if (entity instanceof Player other) {
+                    other.setExp(exp);
+                    other.setLevel(level);
+                }
+            }
+        } else {
+            player.setExp(exp);
+            player.setLevel(level);
+        }
     }
 }
