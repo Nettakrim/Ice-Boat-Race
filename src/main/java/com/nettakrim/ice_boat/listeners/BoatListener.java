@@ -11,10 +11,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityDismountEvent;
+import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
-import org.spigotmc.event.entity.EntityDismountEvent;
-import org.spigotmc.event.entity.EntityMountEvent;
 
 import com.nettakrim.ice_boat.IceBoat;
 import com.nettakrim.ice_boat.IceBoat.GameState;
@@ -33,11 +33,15 @@ public class BoatListener implements Listener {
 
     @EventHandler
     public void onMount(EntityMountEvent event) {
-        Entity entity = event.getMount();
+        Entity entity = event.getEntity();
+        plugin.getLogger().info("hi?");
         if (entity.getWorld() != plugin.world) return;
+        plugin.getLogger().info("hi? 2");
         if (plugin.gameState != GameState.WAITING) return;
+        plugin.getLogger().info("hi? 3");
 
         if (!(entity instanceof Player player)) return;
+        plugin.getLogger().info("hi? 4");
         plugin.waitingPlayerJoin(player, event.getEntity());
     }
 
