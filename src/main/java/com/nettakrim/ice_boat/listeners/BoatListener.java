@@ -34,14 +34,10 @@ public class BoatListener implements Listener {
     @EventHandler
     public void onMount(EntityMountEvent event) {
         Entity entity = event.getEntity();
-        plugin.getLogger().info("hi?");
         if (entity.getWorld() != plugin.world) return;
-        plugin.getLogger().info("hi? 2");
         if (plugin.gameState != GameState.WAITING) return;
-        plugin.getLogger().info("hi? 3");
 
         if (!(entity instanceof Player player)) return;
-        plugin.getLogger().info("hi? 4");
         plugin.waitingPlayerJoin(player, event.getEntity());
     }
 
