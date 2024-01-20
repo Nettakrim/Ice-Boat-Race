@@ -38,7 +38,7 @@ public class BoatListener implements Listener {
         if (plugin.gameState != GameState.WAITING) return;
 
         if (!(entity instanceof Player player)) return;
-        plugin.waitingPlayerJoin(player, event.getEntity());
+        plugin.waitingPlayerJoin(player, event.getMount());
     }
 
     @EventHandler
