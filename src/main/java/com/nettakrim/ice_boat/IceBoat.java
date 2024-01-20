@@ -112,6 +112,7 @@ public class IceBoat extends JavaPlugin {
         progress.addPlayer(player);
         player.setGameMode(GameMode.ADVENTURE);
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, -1, 0, true, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, -1, 0, true, false, false));
 
         if (countDownTask != null && !countDownTask.isCancelled()) {
             setCountDownTime((int)(countDownLength/2), true);
