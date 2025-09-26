@@ -157,7 +157,7 @@ public class Generation {
 
         if (isFinishLine) {
             Location location = new Location(plugin.world, path.exit.point.x+(path.exit.angle.x*radius*0.75f), height+2, path.exit.point.y+(path.exit.angle.y*radius*0.75f));
-            winParticles = Bukkit.getScheduler().runTaskTimer(plugin, () -> plugin.world.spawnParticle(Particle.TOTEM, location, 3, 2, 0.25, 2, 0.1, null, true), 0L, 0L);
+            winParticles = Bukkit.getScheduler().runTaskTimer(plugin, () -> plugin.world.spawnParticle(Particle.TOTEM_OF_UNDYING, location, 3, 2, 0.25, 2, 0.1, null, true), 0L, 0L);
         }
 
         if (height > endHeight+2) {
@@ -177,7 +177,7 @@ public class Generation {
         Path path = null;
 
         End lastEnd;
-        if (paths.size() == 0) {
+        if (paths.isEmpty()) {
             lastEnd = defaultEnd;
         } else {
             lastEnd = paths.get(paths.size()-1).exit;

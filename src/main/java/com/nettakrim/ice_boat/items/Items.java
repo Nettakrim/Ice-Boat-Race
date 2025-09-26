@@ -80,7 +80,7 @@ public class Items {
     public void giveStartingItems(Player player, Entity vehicle) {
         PlayerInventory inventory = player.getInventory();
         inventory.clear();
-        if (vehicle.getPassengers().size() == 0) {
+        if (vehicle.getPassengers().isEmpty()) {
             for (Map.Entry<String, ItemStack> entry : items.entrySet()) {
                 addStartingItems(inventory, entry.getValue(), entry.getKey());
             }
@@ -197,11 +197,11 @@ public class Items {
 
         location.add(0, 1, 0);
         BlockData blockData = Material.SNOW_BLOCK.createBlockData();
-        location.getWorld().spawnParticle(Particle.BLOCK_CRACK, location, 50, 2.5, 1, 2.5, blockData);
+        location.getWorld().spawnParticle(Particle.BLOCK, location, 50, 2.5, 1, 2.5, blockData);
         plugin.playSoundGloballyToPlayer(player, Sound.ENTITY_SNOW_GOLEM_DEATH, location, true, 0.85f, 1.15f);
 
         if (spawnGolem) {
-            Snowman snowman = (Snowman)location.getWorld().spawnEntity(location, EntityType.SNOWMAN);
+            Snowman snowman = (Snowman)location.getWorld().spawnEntity(location, EntityType.SNOW_GOLEM);
             plugin.resetClearEntities.add(snowman);
             plugin.playSoundGloballyToPlayer(player, Sound.ENTITY_IRON_GOLEM_HURT, location, true, 0.85f, 1.15f);
         }
@@ -223,8 +223,7 @@ public class Items {
 
     public void teleportBoatWithPassengers(Boat boat, Location location) {
         //spawning a new boat is probably not ideal, but i couldnt figure out how to not
-        Boat newVehicle = (Boat)(boat.getWorld().spawnEntity(location, EntityType.BOAT));
-        newVehicle.setBoatType(boat.getBoatType());
+        Boat newVehicle = (Boat)(boat.getWorld().spawnEntity(location, boat.getType()));
         List<Entity> oldPassengers = boat.getPassengers();
         newVehicle.setGravity(boat.hasGravity());
         boat.remove();

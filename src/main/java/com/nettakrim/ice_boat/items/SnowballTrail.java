@@ -54,9 +54,9 @@ public class SnowballTrail extends BukkitRunnable {
         }
 
         BlockData blockData = Material.SNOW_BLOCK.createBlockData();
-        location.getWorld().spawnParticle(Particle.BLOCK_CRACK, location, 1, 0.1, 0.1, 0.1, blockData);
+        location.getWorld().spawnParticle(Particle.BLOCK, location, 1, 0.1, 0.1, 0.1, blockData);
 
-        if ((big || small) && plugin.random.nextFloat() < (big ? 0.75 : 0.333)) {
+        if ((big || small) && IceBoat.random.nextFloat() < (big ? 0.75 : 0.333)) {
             plugin.playSoundLocallyToAll(Sound.BLOCK_SNOW_BREAK, location, 0.8f, 1.2f);
         }
     }

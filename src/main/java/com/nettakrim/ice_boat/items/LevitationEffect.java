@@ -52,7 +52,7 @@ public class LevitationEffect extends BukkitRunnable {
     @Override
     public void run() {
         Location location = player.getLocation();
-        world.spawnParticle(Particle.FIREWORKS_SPARK, location, 0, 0, 0.1, 0);
+        world.spawnParticle(Particle.FIREWORK, location, 0, 0, 0.1, 0);
         if (location.getY() < driftCorrection) {
             Entity vehicle = player.getVehicle();
             if (vehicle != null) {
@@ -74,7 +74,7 @@ public class LevitationEffect extends BukkitRunnable {
         setExpTimer(0, 0);
         if (vehicle != null) vehicle.setGravity(true);
         if (makeNoise) {
-            world.spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1, null);
+            world.spawnParticle(Particle.FIREWORK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1, null);
             plugin.playSoundGloballyToPlayer(player, Sound.ENTITY_FIREWORK_ROCKET_BLAST, player.getLocation(), true, 0.95f, 1.05f);
         }
         cancel();
@@ -82,6 +82,7 @@ public class LevitationEffect extends BukkitRunnable {
 
     private void setExpTimer(float exp, int level) {
         if (player.isInsideVehicle()) {
+            //noinspection DataFlowIssue
             for (Entity entity : player.getVehicle().getPassengers()) {
                 if (entity instanceof Player other) {
                     other.setExp(exp);

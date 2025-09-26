@@ -35,6 +35,18 @@ public class IceBoat extends JavaPlugin {
     public Generation generation;
     public Items items;
 
+    private final EntityType[] boatTypes = {
+            EntityType.ACACIA_BOAT,
+            EntityType.BIRCH_BOAT,
+            EntityType.CHERRY_BOAT,
+            EntityType.DARK_OAK_BOAT,
+            EntityType.JUNGLE_BOAT,
+            EntityType.MANGROVE_BOAT,
+            EntityType.OAK_BOAT,
+            EntityType.PALE_OAK_BOAT,
+            EntityType.SPRUCE_BOAT
+    };
+
     @Override
     public void onEnable() {
         new BoatListener(this);
@@ -51,6 +63,7 @@ public class IceBoat extends JavaPlugin {
     @Override
     public void reloadConfig() {
         super.reloadConfig();
+        //noinspection DataFlowIssue
         world = Bukkit.getWorld(getConfig().getString("world.worldName"));
     }
 
@@ -92,12 +105,10 @@ public class IceBoat extends JavaPlugin {
         int boats = waitingBoats.size();
 
         if (boats < world.getPlayerCount()) {
-            int types = Boat.Type.values().length;
             int b = boats%9;
             float position = (float)((b+1)/2) * ((b%2)-0.5f) * 5;
             location = new Location(world, (-2.5f*(float)(boats/9))+2.5f, generation.getCurrentHeight()+2, position+0.5f, -90, 0);
-            Boat boat = (Boat)world.spawnEntity(location, EntityType.BOAT);
-            boat.setBoatType(Boat.Type.values()[random.nextInt(types)]);
+            Boat boat = (Boat)world.spawnEntity(location, getRandomBoat());
             waitingBoats.add(boat);
         } else {
             location = waitingBoats.get(boats-1).getLocation();
@@ -124,7 +135,7 @@ public class IceBoat extends JavaPlugin {
 
         if (waitingBoats != null) {
             for (Boat boat : waitingBoats) {
-                if (boat.getPassengers().size() == 0) {
+                if (boat.getPassengers().isEmpty()) {
                     boat.remove();
                 }
             }
@@ -222,7 +233,7 @@ public class IceBoat extends JavaPlugin {
         }
 
         for (Boat boat : waitingBoats) {
-            if (boat.getPassengers().size() == 0) {
+            if (boat.getPassengers().isEmpty()) {
                 boat.remove();
             }
         }
@@ -245,8 +256,9 @@ public class IceBoat extends JavaPlugin {
 
         if (winner != null) {
             StringBuilder winnerName = new StringBuilder();
+            //noinspection DataFlowIssue
             for (Entity passenger : winner.getVehicle().getPassengers()) {
-                if (winnerName.length() > 0) {
+                if (!winnerName.isEmpty()) {
                     winnerName.append(" and ");
                 }
                 winnerName.append(passenger.getName());
@@ -273,16 +285,18 @@ public class IceBoat extends JavaPlugin {
         if (winner != null) {
             Location location = winner.getLocation();
             location.add(0,1,0);
-            world.spawnParticle(Particle.VILLAGER_HAPPY, location, 64, 4, 2, 4, 0.1, null, true);
+            world.spawnParticle(Particle.HAPPY_VILLAGER, location, 64, 4, 2, 4, 0.1, null, true);
             playSoundLocallyToAll(Sound.ENTITY_PLAYER_LEVELUP, location, 0.95f, 1.05f);
 
             if (winner.isInsideVehicle()) winner.getVehicle().setGravity(false);
         }
 
         for (Player player : players) {
+            //noinspection DataFlowIssue
             if (player != winner && (!player.isInsideVehicle() || player.getVehicle() != winner.getVehicle())) {
                 player.setGameMode(GameMode.SPECTATOR);
                 if (player.isInsideVehicle()) {
+                    //noinspection DataFlowIssue
                     player.getVehicle().remove();
                 }
             }
@@ -298,6 +312,7 @@ public class IceBoat extends JavaPlugin {
         double height = getConfig().getDouble("world.spawnHeight");
         for (Player player : players) {
             if (player.isInsideVehicle()) {
+                //noinspection DataFlowIssue
                 player.getVehicle().remove();
             }
         }
@@ -319,6 +334,7 @@ public class IceBoat extends JavaPlugin {
 
     public void updatePlayerPosition(Player player, Block block, Material material, Location location) {
         Entity vehicle = player.getVehicle();
+        //noinspection DataFlowIssue
         if (!player.isInsideVehicle() || vehicle.getPassengers().get(0) != player) return;
         
         if (block.isSolid()) {
@@ -355,6 +371,7 @@ public class IceBoat extends JavaPlugin {
         if (player.isInsideVehicle()) {
             Entity vehicle = player.getVehicle();
             //save the second passenger
+            //noinspection DataFlowIssue
             if (vehicle.getPassengers().size() > 1) {
                 temporaryAllowDismount = true;
                 Entity other = vehicle.getPassengers().get(1);
@@ -368,8 +385,7 @@ public class IceBoat extends JavaPlugin {
                     teleportEffect(location, otherPlayer);
                 }
 
-                Boat newVehicle = (Boat)(vehicle.getWorld().spawnEntity(location, EntityType.BOAT));
-                newVehicle.setBoatType(((Boat)vehicle).getBoatType());
+                Boat newVehicle = (Boat)(vehicle.getWorld().spawnEntity(location, vehicle.getType()));
                 newVehicle.setGravity(vehicle.hasGravity());
                 vehicle.remove();
                 other.teleport(location);
@@ -388,8 +404,8 @@ public class IceBoat extends JavaPlugin {
 
         if (explode) {
             Location location = player.getLocation().add(0, 1, 0);
-            world.spawnParticle(Particle.SMOKE_LARGE, location, 50, 0, 0, 0, 0.5, null, true);
-            world.spawnParticle(Particle.EXPLOSION_LARGE, location, 10, 1, 1, 1, 1, null, true);
+            world.spawnParticle(Particle.LARGE_SMOKE, location, 50, 0, 0, 0, 0.5, null, true);
+            world.spawnParticle(Particle.EXPLOSION_EMITTER, location, 10, 1, 1, 1, 1, null, true);
             playSoundLocallyToAll(Sound.ENTITY_GENERIC_EXPLODE, location, 0.9f, 1.1f);
         }
 
@@ -426,5 +442,9 @@ public class IceBoat extends JavaPlugin {
         Location up = location.clone().add(0,0.5,0);
         playSoundGloballyToPlayer(player, Sound.ENTITY_ENDERMAN_TELEPORT, location, true, 0.85f, 1.15f);
         player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, up, 50);
+    }
+
+    public EntityType getRandomBoat() {
+        return boatTypes[random.nextInt(boatTypes.length)];
     }
 }

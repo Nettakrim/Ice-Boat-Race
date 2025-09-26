@@ -60,7 +60,10 @@ public class ConnectionListener implements Listener {
             plugin.killPlayer(player, true);
         } else {
             plugin.waitingPlayerLeave(player);
-            if (player.isInsideVehicle()) player.getVehicle().remove();
+            if (player.isInsideVehicle()) {
+                //noinspection DataFlowIssue
+                player.getVehicle().remove();
+            }
         }
         plugin.temporaryAllowDismount = false;
     }

@@ -37,6 +37,7 @@ public class ItemListener implements Listener {
             Entity vehicle = player.getVehicle();
             plugin.temporaryAllowDismount = true;
             event.setCancelled(true);
+            assert vehicle != null;
             plugin.items.teleportBoatWithPassengers((Boat)vehicle, event.getTo());
             plugin.teleportEffect(event.getTo(), player);
             plugin.temporaryAllowDismount = false;
@@ -100,8 +101,9 @@ public class ItemListener implements Listener {
 
         if (plugin.gameState != GameState.PLAYING) return;
 
-        if (event.getOffHandItem() != null && event.getOffHandItem().getAmount() > 0) {
+        if (event.getOffHandItem().getAmount() > 0) {
             //give offhanded items to other person in boat
+            //noinspection DataFlowIssue
             if (player.isInsideVehicle() && player.getVehicle().getPassengers().size() > 1) {
                 Player other = (Player)(player.getVehicle().getPassengers().get(1-player.getVehicle().getPassengers().indexOf(player)));
                 other.getInventory().addItem(event.getOffHandItem());

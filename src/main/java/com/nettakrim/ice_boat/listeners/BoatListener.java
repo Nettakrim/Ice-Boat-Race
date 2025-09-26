@@ -11,13 +11,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityDismountEvent;
+import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 
 import com.nettakrim.ice_boat.IceBoat;
 import com.nettakrim.ice_boat.IceBoat.GameState;
-import org.spigotmc.event.entity.EntityDismountEvent;
-import org.spigotmc.event.entity.EntityMountEvent;
 
 public class BoatListener implements Listener {
 
@@ -118,7 +118,7 @@ public class BoatListener implements Listener {
                 BlockData blockData = Material.SNOW_BLOCK.createBlockData();
                 Location location = entity.getLocation();
                 location.add(0,1,0);
-                location.getWorld().spawnParticle(Particle.BLOCK_CRACK, location, 50, 0.5, 1, 0.5, blockData);
+                location.getWorld().spawnParticle(Particle.BLOCK, location, 50, 0.5, 1, 0.5, blockData);
                 plugin.playSoundLocallyToAll(Sound.ENTITY_SNOW_GOLEM_DEATH, location, 0.85f, 1.15f);
 
                 entity.remove();

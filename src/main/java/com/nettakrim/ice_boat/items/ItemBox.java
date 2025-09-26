@@ -118,7 +118,7 @@ public class ItemBox extends BukkitRunnable {
     private void breakBox() {
         plugin.playSoundLocallyToAll(Sound.BLOCK_AMETHYST_BLOCK_BREAK, displayLocation, 0.8f, 1.2f);
         BlockData blockData = display.getItemStack().getType().createBlockData();
-        location.getWorld().spawnParticle(Particle.BLOCK_CRACK, displayLocation, 50, 0.35, 0.35, 0.35, 1, blockData, true);
+        location.getWorld().spawnParticle(Particle.BLOCK, displayLocation, 50, 0.35, 0.35, 0.35, 1, blockData, true);
     }
 
     @Override
